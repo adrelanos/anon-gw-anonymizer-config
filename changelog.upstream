@@ -1,3 +1,9 @@
+commit 0e39ae92ac6ec43283857cf946a072fa582e20ca
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Fri Mar 27 08:57:35 2026 +0000
+
+    bumped changelog version
+
 commit ea0a8426ea5912b57fa631642f0437a0016026e3
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Wed Mar 25 07:58:29 2026 -0400
@@ -59,7 +65,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Tue Jan 6 09:16:27 2026 -0500
 
     Merge pull request #8 from Nurmagoz/patch-3
-    
+
     Update tor-service-defaults-torrc.anondist.base link
 
 commit 31390a1fb14be49997ace9901157e1a1b552a5b3
@@ -87,7 +93,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Mon Jan 5 03:21:36 2026 -0500
 
     Merge pull request #6 from Nurmagoz/patch-1
-    
+
     Link fixing
 
 commit 50e74db68172c8efd4bce6c9bff348eee8c67497
@@ -565,7 +571,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sat Sep 13 05:02:24 2025 -0400
 
     Merge pull request #5 from DanWin/ip6
-    
+
     Enable IPv6
 
 commit 22891afc77840430fd5e140b89851eafcdd6f5a2
@@ -883,7 +889,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Tue May 28 14:44:50 2024 -0400
 
     Revert "no longer disabling IPv6"
-    
+
     This reverts commit 426830dbb6da8efa100a73db23ddcb0de5e4fdae.
 
 commit 02467f61393e8c2bf9a4327a99fe8af41dc49bdf
@@ -909,7 +915,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Tue May 28 10:00:35 2024 -0400
 
     no longer disabling IPv6
-    
+
     because whonix-firewall has been ported to nftables,
     which covers both, IPv4 and IPv6
 
@@ -918,7 +924,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Tue May 28 09:59:34 2024 -0400
 
     make sure that IPv6 forwarding is disabled
-    
+
     by setting sysctl `net.ipv6.conf.all.forwarding = 0`
 
 commit f8c03cf135c500c33e5e6dbe86fa4e330eddbbea
@@ -938,7 +944,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Wed Mar 20 12:15:36 2024 -0400
 
     connect to public Tor network by default / avoid Anon Connection Wizard (ACW) popup at first boot
-    
+
     https://forums.whonix.org/t/connect-to-public-tor-network-by-default-avoid-anon-connection-wizard-acw-popup-at-first-boot/17848
 
 commit d2738b339b182506a123b3f0b8ee1b17e84785d4
@@ -952,7 +958,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sat Feb 17 07:24:34 2024 -0500
 
     disable vanguards because broken in combination with Tor 0.4.8.9
-    
+
     https://forums.whonix.org/t/connections-drop-on-tor-0-4-8-9/17702
     https://gitlab.torproject.org/tpo/core/tor/-/issues/40892
     https://github.com/mikeperry-tor/vanguards/issues/100
@@ -993,7 +999,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sat Nov 11 13:41:25 2023 -0500
 
     change license to AGPL-3+
-    
+
     https://forums.whonix.org/t/license-change-to-agplv3/17455
 
 commit d5eb43c54980160460affd43b7c2958bf9378a6e
@@ -1007,9 +1013,9 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sun Oct 15 10:37:01 2023 -0400
 
     set `CookieAuthentication 1`
-    
+
     to fix a the following warning even if inapplicable:
-    
+
     Oct 15 14:04:17.408 [warn] ControlPort is open, but no authentication method has been configured.  This means that any program on your computer can reconfigure your Tor.  That's bad!  You should upgrade your Tor controller as soon as possible.
 
 commit 1a225d86b63856b8e7afd0a200a5657098ad1622
@@ -1071,7 +1077,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Fri Sep 15 05:06:44 2023 -0400
 
     Tor Browser onion-grater profile add:
-    
+
       events:
         CIRC:
           suppress: true
@@ -1213,7 +1219,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Tue Jan 24 08:45:39 2023 -0500
 
     add workaround for upstream bug Tor fails to start a few times before succeeding to start
-    
+
     https://forums.whonix.org/t/failed-to-start-anonymizing-overlay-network-for-tcp-tor-fails-to-start-a-few-times-before-succeeding-to-start/16289/12
     https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1029554
 
@@ -1284,7 +1290,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Mon Oct 24 09:58:34 2022 -0400
 
     Merge pull request #4 from nyxnor/listing
-    
+
     add onion-grater-list manpage
 
 commit 6a531fd46f07f79b9dfb564f2cf7b1fd867c2fda
@@ -1312,7 +1318,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sat Oct 22 10:58:06 2022 -0400
 
     Merge pull request #3 from nyxnor/listing
-    
+
     improve onion-grater-list
 
 commit 6ca9097f099d8848858793d6c5e56b2da183522e
@@ -1340,7 +1346,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Thu Oct 20 18:00:27 2022 -0400
 
     Merge pull request #2 from nyxnor/listing
-    
+
     add onion-grater-list
 
 commit 12e9103b7d84ca602d6a3951a82d041e36dd4da0
@@ -1432,7 +1438,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sat Jul 9 08:18:39 2022 -0400
 
     anon-verify: fix enumeration of all Tor config drop-in snippets
-    
+
     for new `%include /etc/torrc.d/*.conf` syntax
 
 commit d1d1aa012b4ea628029d1b2e9d73589e332056aa
@@ -1458,7 +1464,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Fri May 27 12:59:35 2022 -0400
 
     remove torrc-d-cleaner
-    
+
     since no longer required because Tor now has wildcard support
     and is configured to parse config files ending with `*.conf` only.
 
@@ -1479,7 +1485,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Fri May 27 11:07:34 2022 -0400
 
     only `%include` config files ending with `*.conf`
-    
+
     https://www.whonix.org/wiki/Dev/Tor
 
 commit 0c083154890edf39829ab9038ba5d556f4295395
@@ -1487,7 +1493,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Fri May 27 11:04:45 2022 -0400
 
     cleanup, remove workaround for old bug
-    
+
     https://forums.whonix.org/t/configuring-onion-service/9042
 
 commit 3d9ba1f191963748bc38469357b536b2cfdd5495
@@ -1501,7 +1507,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Fri May 27 10:54:34 2022 -0400
 
     downgrade copyright to avoid Tor Duplicate Config File Restart Bug
-    
+
     https://www.whonix.org/wiki/Dev/Tor#Tor_Duplicate_Config_File_Restart_Bug
 
 commit 1ed770e5cd22d27f46199eb02f546edfcacc3149
@@ -1515,7 +1521,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Fri May 27 10:23:55 2022 -0400
 
     workaround for Tor Duplicate Config File Restart Bug
-    
+
     https://www.whonix.org/wiki/Dev/Tor#Tor_Duplicate_Config_File_Restart_Bug
 
 commit 3b3ad2c9aa74e5c3c1a11bc85526d0391af8e291
@@ -1559,14 +1565,14 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Thu Feb 10 13:58:57 2022 -0500
 
     fix Tor Browser 11.06 - New Identity function error message
-    
+
     suppressed subscription to event 'STREAM
-    
+
     related to:
     https://www.whonix.org/wiki/Tor_Browser#New_Tor_Circuit_Function
-    
+
     Thanks to @torjunkie to the bug report!
-    
+
     https://forums.whonix.org/t/tb-v11-06-new-identity-function-error-message/13326
 
 commit 59e5d82385062fa827aa4191911cdd6e928c3231
@@ -1748,9 +1754,9 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Fri Jul 23 05:34:10 2021 -0400
 
     `ControlPort 9052`
-    
+
     Required for onion-grater updates.
-    
+
     https://gitlab.torproject.org/tpo/core/tor/-/issues/25173
 
 commit bcaf2266858070a27d50c23955c111d8f2bf4034
@@ -1782,9 +1788,9 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Wed Apr 7 18:28:57 2021 -0400
 
     reload apparmor profiles after installation
-    
+
     to make package work after installation
-    
+
     no longer requiring reboot
 
 commit 3242a0fc37b24847a6168cd7563af9ab582dbb4a
@@ -1792,13 +1798,13 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Wed Apr 7 16:44:34 2021 -0400
 
     part of fixing meek lite in Whonix
-    
+
     add /usr/lib/anon-gw-anonymizer-config/edit-etc-resolv-conf
-    
+
     https://forums.whonix.org/t/censorship-circumvention-tor-pluggable-transports/2601/9
-    
+
     https://forums.whonix.org/t/whonix-gateway-cli-15-0-1-5-4-meek-azure-bridge-tls-error/11383
-    
+
     Thanks to @Bl3ckJ4ck for the bug report!
 
 commit 74ad7f44fde4094c895d2c42c4e2d7cea96b4804
@@ -1890,7 +1896,7 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Thu Mar 11 12:57:10 2021 -0500
 
     /usr/lib/anon-gw-anonymizer-config/torrc-d-cleaner: fix
-    
+
     Avoid moving
     `/etc/torrc.d/95_whonix.conf`
     to
@@ -1920,14 +1926,14 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Fri Feb 12 03:31:32 2021 -0500
 
     disable the following Tor stream isolation ports
-    
+
     - privoxy 9112
     - polipo 9113
     - Tor Browser Updater by Whonix Developers gpg 9116
     - TorChat 9119
     - mixmaster update 9120
     - mixmaster 9121
-    
+
     since deprecated applications in Whonix and no longer in use
 
 commit 7f169a4290548648bd028a9bf5881497714ba31c
@@ -2007,7 +2013,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Jan 20 06:12:59 2021 -0500
 
     add anon-log
-    
+
     anon-log is a user-friendly wrapper around the journalctl in Whonix to view Tor related log entries while filtering out irrelevant log output, non-issues.
 
 commit c35eced67cea4c5f192c0f6d06525c032dc067cc
@@ -2021,7 +2027,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Dec 25 07:22:58 2020 -0500
 
     install no longer no longer required auditd by default
-    
+
     https://phabricator.whonix.org/T537
 
 commit c6c9ff020c1f6b07e1767a6aed1c977e740da615
@@ -2053,7 +2059,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Jul 29 08:24:11 2020 -0400
 
     restart/reload anon-gw-anonymizer-config.service first on tor@default restart/reload
-    
+
     PartOf=tor@default.service
     ReloadPropagatedFrom=tor@default.service
 
@@ -2062,7 +2068,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Jul 29 08:21:03 2020 -0400
 
     restart/reload anon-gw-anonymizer-config.service first on tor restart/reload
-    
+
     PartOf=tor.service
     ReloadPropagatedFrom=tor.service
 
@@ -2077,7 +2083,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Jul 23 07:23:22 2020 -0400
 
     ClientOnionAuthDir /var/lib/tor/authdir
-    
+
     https://forums.whonix.org/t/onion-services-authentication/975
 
 commit b5107c02ca50b924377cede22d390dcd31796e39
@@ -2091,11 +2097,11 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Jun 5 09:31:05 2020 -0400
 
     Revert "permit onion v3 authentication of Tor Browser"
-    
+
     This reverts commit 97ff68a6c49ecef3e79ab10e1a930a4f5e13198d.
-    
+
     Allows login accross multiple VMs. Therefore potential cross VM tracking identifier.
-    
+
     https://phabricator.whonix.org/T996#20096
 
 commit 729490819e3e5a5eb5de9e64c87c3a993413e67e
@@ -2109,13 +2115,13 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Jun 4 11:39:36 2020 -0400
 
     permit onion v3 authentication of Tor Browser
-    
+
     white list in `onion-grater`
         onion_client_auth_add:
               - '.+'
-    
+
     Thanks to @rustybird for the bug report!
-    
+
     https://phabricator.whonix.org/T996
 
 commit d7f2e13ad0a2ca1e4a73ca3baa86c5069546b754
@@ -2123,11 +2129,11 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Jun 4 10:45:33 2020 -0400
 
     permit Tor Browser to show improved error pages for onion service errors
-    
+
     Tor Browser SocksPort add ExtendedErrors
-    
+
     https://phabricator.whonix.org/T996
-    
+
     Thanks to @rustybird for the suggestion!
 
 commit 8c34fe12e895d1079b24c47aa16a112bd1691ca8
@@ -2153,7 +2159,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed May 6 15:33:47 2020 -0400
 
     re-add missing /run/tor/socks
-    
+
     SocksPort unix:/run/tor/socks WorldWritable
 
 commit c9434ce3cbab0cf3be22f3d959fa2201ae904cdb
@@ -2197,7 +2203,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Apr 9 10:18:48 2020 +0000
 
     no longer modify /etc/default/tor.anondist
-    
+
     since file is not being used for controlling Tor-startup when Tor is launched by systemd.
 
 commit 7e80c0ba5ca766d402c906154edf510ef3c614e1
@@ -2337,7 +2343,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Apr 3 07:56:24 2020 -0400
 
     remove upstream Tor defaults
-    
+
     because was able to revert Tor upstream default config file
     /usr/share/tor/tor-service-defaults-torrc back to original
 
@@ -2438,7 +2444,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Mar 26 05:49:36 2020 -0400
 
     add onion-grater-add / onion-grater-remove
-    
+
     helper scripts for better usability making it possible to add onion-grater
     profiles with 1 short command instead of 3 long ones
 
@@ -2455,7 +2461,7 @@ Date:   Thu Mar 5 08:32:21 2020 -0500
     Fix bug in Whonix 15.0.0.8.9 where anon-connection-wizard added
     `%include /etc/torrc.d/95_whonix.conf` to `/etc/tor/torrc` configuration
     file even though Whonix was already ported to `%include /etc/torrc.d/`.
-    
+
     https://forums.whonix.org/t/configuring-onion-service/9042
 
 commit 504b93473edab61e54f989bd17fbd99f7e399cb8
@@ -2463,7 +2469,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Mar 5 07:52:30 2020 -0500
 
     when trying to reload Tor but Tor not yet running, (re)start Tor instead
-    
+
     https://forums.whonix.org/t/configuring-onion-service/9042/32
 
 commit fd71c287061cfd7144e2fd92a7c75d6ac9236d55
@@ -2471,14 +2477,14 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Mar 5 07:45:31 2020 -0500
 
     refactoring
-    
+
     provide /usr/lib/anon-gw-anonymizer-config/tor-config-sane
-    
+
     which calls both
-    
+
     - /usr/lib/anon-gw-anonymizer-config/make-sure-torrc-exist
     - /usr/lib/anon-gw-anonymizer-config/tor-config-sane
-    
+
     Therefore re-usable by anon-connection-wizard.
 
 commit 2e56e190717450a0855adb74596afff178ad07a3
@@ -2486,7 +2492,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Mar 5 07:32:42 2020 -0500
 
     make sure files /etc/tor/torrc and /etc/torrc.d/95_whonix.conf exist
-    
+
     https://forums.whonix.org/t/configuring-onion-service/9042/29
 
 commit 743e2e0f14d0fb9eca958830334b8e68f4093632
@@ -2500,7 +2506,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Mar 2 16:16:24 2020 -0500
 
     anon-verify: report Extraneous Tor Configuration Files
-    
+
     files that do not end with file extension '.conf'
 
 commit 2403c0b06830ac2beccb1b5012f67ac60f9b54f7
@@ -2508,7 +2514,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Mar 2 15:35:00 2020 -0500
 
     anon-verify: ignore file names starting with dot (".")
-    
+
     Quote Tor manual: 'Files starting with a dot are ignored.'
 
 commit bc98b8efe47641510b85212c1c38360340813f0a
@@ -2516,7 +2522,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Mar 2 15:29:06 2020 -0500
 
     anon-verify: ignore subfolders when using %include /path/to/folder
-    
+
     Quote Tor manual: 'Files on subfolders are ignored.'
 
 commit 6e0b8a224e9bf4f3eafd5a7c169655d83cd2a1c5
@@ -2572,7 +2578,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Jan 17 04:44:25 2020 -0500
 
     enable vanguards by default
-    
+
     https://forums.whonix.org/t/vanguards-additional-protections-for-tor-onion-services/8064/11
 
 commit 3dbc092e2f2f440349a56565d039d109bf161261
@@ -2604,7 +2610,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Jan 15 06:29:42 2020 -0500
 
     add from original /etc/tor/vanguards.conf to /etc/tor/anon-vanguards.conf
-    
+
     without changes
 
 commit 0858b072659ce4a375ba9b08b84da3d45300336a
@@ -2732,7 +2738,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Jan 6 07:30:48 2020 -0500
 
     add anon-auth-autogen - script to automate creating authenticated onion v3 services
-    
+
     https://forums.whonix.org/t/onion-services-authentication/975
 
 commit 4cfec24eb356761f749a15b5a4581acbc34c71f6
@@ -2746,9 +2752,9 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Sun Dec 22 04:25:04 2019 -0500
 
     remove mixmaster comment
-    
+
     since deprecated in Debian
-    
+
     https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=880101
 
 commit 990b6dc083f9955ad8f823f41289051b4cff58d1
@@ -2810,9 +2816,9 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Tue Nov 19 09:50:19 2019 -0500
 
     fix use of sudoedit
-    
+
     https://forums.whonix.org/t/use-sudoedit-in-whonix-documentation-and-whonix-software/7599/30
-    
+
     as suggested by @madaidan
 
 commit d11beab98ba58312fca909889763b0d69b5d5e7c
@@ -3170,7 +3176,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Mar 25 02:38:12 2019 -0400
 
     Merge pull request #17 from HulaHoopWhonix/patch-5
-    
+
     Updated SMTP servers and mapaddress
 
 commit 611572e72021fd5a2437be4d4f89d3b02045faf0
@@ -3208,18 +3214,18 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Mar 1 14:31:47 2019 +0000
 
     add improved legal protections clauses
-    
+
     The license for software created by Whonix is the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version with additional terms applicable per GNU GPL version 3 section 7.
-    
+
     The additional terms are based on the Doom 3 license which is Debian refers to as `GPL-3+-with-id-software-additional-terms`, which is Debian DFSG [1] (The Debian Free Software Guidelines) approved and which is therefore suitable for Debian `main`. Whonix made applied minimal changes to it:
-    
+
     * Rewrite `The Doom 3 BFG Edition GPL Source Code` to the more common `this program` which is used throughout the GPL.
     * Added a "trump clause" [2], in other words, any conflicts or disputes between the additional terms and the GPLv3 shall be resolved in favor of the GPLv3 by adding `Notwithstanding any other provision of this License` (as mentioned in GPL FAQ [3]) at the beginning of the additional terms.
-    
+
     [1] https://www.debian.org/social_contract#guidelines
     [2] https://www.fsf.org/news/canonical-updated-licensing-terms
     [3] https://www.gnu.org/licenses/gpl-faq.html#v3Notwithstanding
-    
+
     For more considerations, see also:
     https://www.whonix.org/wiki/Dev/Licensing
 
@@ -3246,9 +3252,9 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Nov 28 05:28:08 2018 +0000
 
     fix, remove mapaddress entries in torrc for 1.1.1.1 and 2.2.2.2 since these allow fingerprinting Whonix users
-    
+
     Thanks to nusenu for the bug report!
-    
+
     https://phabricator.whonix.org/T878
 
 commit 2be3b5445a8d6393949f9db183199d2d30820ec8
@@ -3322,13 +3328,13 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Sun Aug 5 09:05:29 2018 +0000
 
     fix, remove double hash tag comments to fix mime type
-    
+
     use single has tag comments instead
-    
+
     before (bug):
     DE=generic xdg-mime query filetype /usr/local/etc/torrc.d/50_user.conf
     text/x-matlab
-    
+
     after (fixed):
     DE=generic xdg-mime query filetype ./usr/share/anon-gw-anonymizer-config/user_torrc_template.conf
     text/plain
@@ -3364,7 +3370,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Jun 25 16:59:28 2018 +0000
 
     Merge pull request #15 from HulaHoopWhonix/patch-4
-    
+
     Added Isolation settings comments
 
 commit f4a485f54165884c4794559f5e0caa5c674899ea
@@ -3398,7 +3404,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Tue Jun 19 09:59:13 2018 +0200
 
     Merge pull request #14 from irykoon/master
-    
+
      Better format for the anon-verify report and bug fixes
 
 commit 1de285a2e6b025cb45a4d79abce5a5db9e3eed86
@@ -3450,7 +3456,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Mon Jun 18 12:06:01 2018 +0000
 
     Support -v and -vv options for anon-verify
-    
+
     -v and -vv will show an additional report on how Tor configuration is
     parsed, excluding and including comments in the configuration files
     respectively
@@ -3468,7 +3474,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Jun 18 08:13:04 2018 +0200
 
     Merge pull request #13 from irykoon/parser
-    
+
      Support verbose parsing and smart suggestion for anon-verify
 
 commit cfa862c27bf55cd65a2fbb23091fbb4a2cfb13e9
@@ -3494,7 +3500,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Mon Jun 18 05:34:07 2018 +0000
 
     Better bash practice for torrc-parser
-    
+
     Quote like a manic.
 
 commit fe889c8e740226508b9d2d726b2a39ace8e1fa96
@@ -3509,7 +3515,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Jun 18 02:24:58 2018 +0200
 
     Merge pull request #12 from irykoon/master
-    
+
     More strict permission on snowflake-client
 
 commit 7d43e77da21e52e9d904ae4c13b74b66afddb5ed
@@ -3517,43 +3523,43 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Sun Jun 17 17:50:17 2018 +0000
 
     Support verbose parsing and smart suggestion for anon-verify
-    
+
     The configuration file parsing for system Tor is complex. It is hard
     for a daily user to figure out what exact command is used by systemd
     to start Tor. Moreover, it can be overwhelming for a human being to
     follow the logic of Tor configuration parsing since the %include line
     can appear any where in a file and the included path can be either a
     directory or a file.
-    
+
     Therefore, anon-verify is now upgraded to free user from these
     overwhelming work by support verbose parsing and smart suggestion.
-    
+
     For the verbose parsing, anon-verify will automatically extract the torrc
     files used in systemd that starts Tor. And then, it will show user the
     parsing of torrc files step by step, following the exact same logic
     Tor used.
-    
+
     In terms of the smart suggestion, anon-verify will try to offer an
     specific and useful suggestion when there is something wrong with the
     Tor configuration. For example, when a wrong option is included by
     user, Tor will simply complain:
-    
+
     '''
     [warn] Failed to parse/validate config: Unknown option 'dsafklj'. Failing.
     '''
-    
+
     But anon-verify will tell user:
-    
+
     '''
     The following files contain unkown option 'dsafklj':
     /etc/tor/torrc:5:dsafklj
     Please modify these files to fix the problem.
     '''
-    
+
     anon-verify can also tell users how many and which files have been
     used the Tor configuration files, making them suddenly realize if they
     have included any file they don't want to use:
-    
+
     '''
     7 files are used as Tor configuration files:
     /usr/share/tor/tor-service-defaults-torrc /etc/tor/torrc /etc/torrc.d/95_whonix.conf /usr/local/etc/torrc.d/40_anon_connection_wizard.conf /usr/local/etc/torrc.d/40_anon_connection_wizard.conf~ /usr/local/etc/torrc.d/50_user.conf /usr/local/etc/torrc.d/50_user.conf~
@@ -3571,7 +3577,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Sat Jun 16 16:31:07 2018 +0000
 
     More strict permission on snowflake-client
-    
+
     ix is enough as what is used by dcf in this ticket:
     https://trac.torproject.org/projects/tor/ticket/24203#comment:8
 
@@ -3580,7 +3586,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Jun 15 04:36:16 2018 +0200
 
     anon-verify sudoers.d
-    
+
     https://github.com/Whonix/anon-gw-anonymizer-config/pull/10
 
 commit 49618b4e8b7d553abee3d8bce11b9827f7a95ae5
@@ -3608,7 +3614,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Jun 15 04:25:04 2018 +0200
 
     Merge pull request #10 from irykoon/master
-    
+
      Add anon-verify as a user-friendly wrapper
 
 commit f6dc5849d7f209b2bc0bae6335e70e91e0311bf1
@@ -3616,7 +3622,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Thu Jun 14 16:06:24 2018 +0000
 
     Allow apparmor execute snowflake-client
-    
+
     Without the fix, Tor will complain "Pemission Denied" when trying to
     execute snowflake-client.
 
@@ -3637,7 +3643,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Sat May 26 09:29:26 2018 +0000
 
     Swap the copyright lines
-    
+
     Not sure if this is what @adrelanos means?
 
 commit 61dba7159af0dabadf468566ea5b1e649ca76e39
@@ -3645,7 +3651,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Sat May 26 09:25:21 2018 +0000
 
     Fix a typo
-    
+
     Thanks @adrelanos for the careful review and pointing this out.
 
 commit 9edc72ec4f83a82f52f14b5c4f254cd564f3436a
@@ -3660,7 +3666,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Sun Apr 15 03:15:35 2018 +0000
 
     Add anon-verify as a user-friendly wrapper
-    
+
     anon-verify is a user-friendly wrapper around the Tor --verify-config
     in Whonix. It will do a proper Tor configuration verification and then
     generate an easy to understand report. It will also be used by other
@@ -3756,11 +3762,11 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Feb 22 02:22:51 2018 +0100
 
     no required
-    
+
     lib/systemd/system/anon-gw-anonymizer-config.service
-    
+
     Before=tor.service
-    
+
     is sufficient. Doesn't need to be both way.
 
 commit 7456e1718990c5584ae969bb047de2cb7f581bff
@@ -3776,7 +3782,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Feb 22 01:13:41 2018 +0000
 
     Merge pull request #9 from irykoon/master
-    
+
     Control Port workaround & Make sure torrc files exist before starting Tor
 
 commit 17c3df9b7eb4d2ec496df8a262573fb85bb59379
@@ -3784,7 +3790,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Wed Feb 21 23:16:14 2018 +0000
 
     /etc/torrc.d -> /etc/torrc.d/95_whonix.conf
-    
+
     We should avoid any `%include directory` for now before this feature is available in Tor stable: https://trac.torproject.org/projects/tor/ticket/25140#ticket
 
 commit e37d7736fa3b48a03972a81872a1e43b2ba5d12e
@@ -3798,8 +3804,8 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Wed Feb 21 18:34:58 2018 +0000
 
     usr/bin/make-sure-torrc-exist -> usr/lib/anon-gw-anonymizer-config/make-sure-torrc-exist
-    
-    Thanks to the suggestion by Patrick: "[o]therwise we’d have to create and ship a man page (otherwise lintian warning).
+
+    Thanks to the suggestion by Patrick: "[o]therwise we_d have to create and ship a man page (otherwise lintian warning).
 
 commit 85f3602580687d3fb442f748f68706d4ccaa5156
 Merge: ae80ee0 05b6fb3
@@ -3825,7 +3831,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Mon Feb 19 18:59:29 2018 +0000
 
     Attempt to make sure all torrc files exist
-    
+
     However, this does not work as epected. This commit is only for demonstration purpose.
 
 commit 9a9c921ac23731beccbae11ccd64002e42710026
@@ -3852,9 +3858,9 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Feb 5 22:58:37 2018 +0000
 
     Revert "parse only *.conf"
-    
+
     This reverts commit 7c9bbde4d0669b198f9f16af5488f0bd03878257.
-    
+
     Thanks to @iry for the bug report!
 
 commit 3fa30e8ae650de1fe0db676eb931ebf446286b13
@@ -3886,7 +3892,7 @@ Author: irykoon <irykoon@gmail.com>
 Date:   Sun Feb 4 20:46:45 2018 +0000
 
     ControlSocket workaround
-    
+
     When both User option and DisabkeNetwork 1 are set as part of the Tor configurations, the Tor control socket will not be opened unless reloading Tor: https://lists.torproject.org/pipermail/tor-dev/2018-February/012887.html
 
 commit 45239a239bd05e7bb59f3d2d91a4e4d26f87f5ea
@@ -3954,7 +3960,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Sun Jan 21 13:41:27 2018 +0100
 
     fix, renamed:    etc/torrc.d/torrc.examples -> usr/share/anon-gw-anonymizer-config/torrc.examples
-    
+
     to prevent Tor config parsing error
 
 commit a5687aeb9bfe66b3fb8c0bb0a2c233e467cb6aa7
@@ -3976,7 +3982,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Jan 18 04:10:07 2018 +0100
 
     Merge pull request #8 from irykoon/master
-    
+
     Better instructions in comments
 
 commit 31d78a368da83ef74628649d49b913f9aa651ab7
@@ -4058,7 +4064,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Sun Dec 31 16:34:42 2017 +0000
 
     Merge pull request #7 from irykoon/master
-    
+
     Change the AppArmor rules for anon-connection-wizard
 
 commit ce068ea2c07555db4fcd2ba531dfb19fdb7337f1
@@ -4066,7 +4072,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Sun Dec 31 17:07:49 2017 +0100
 
     fix Tor drop-in config folder apparmor permissions
-    
+
     Thanks to @irykoon for the bug report!
 
 commit 14a3a9780d25befa0e6fc4f99483f76d70387d4f
@@ -4223,7 +4229,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Jun 7 12:12:29 2017 +0000
 
     Merge pull request #6 from irykoon/master
-    
+
     delete "managed" option in obfs4 line
 
 commit 42c3573f4a40d51768553aa45bbf0064b79e5bdd
@@ -4245,7 +4251,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Mon Jun 5 14:35:32 2017 +0200
 
     Merge pull request #5 from irykoon/master
-    
+
     use a better URL to bridge
 
 commit 3a553a41045fa50e56f4409e7745b19b9bca0e96
@@ -4277,7 +4283,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Tue Feb 21 22:09:34 2017 +0000
 
     use systemctl --no-pager to prevent blocking due to systemctl interactivity
-    
+
     https://phabricator.whonix.org/T637
 
 commit bed0954fc94e8d2057cb0e860ea14416e4680576
@@ -4339,7 +4345,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Feb 10 15:47:48 2017 +0000
 
     remove faketime from Build-Depends:
-    
+
     since no longer used for reproducible builds
 
 commit 19fcebf486344e8f9cfee03d87bc1539398ab937
@@ -4383,7 +4389,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Jan 18 08:18:51 2017 +0000
 
     versioned Depends: tor (>= 0.2.7.3)
-    
+
     https://phabricator.whonix.org/T436
 
 commit f6b66bce1ef9a4b344b59e26358a7ec293b710aa
@@ -4415,11 +4421,11 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Sep 23 00:24:52 2016 +0000
 
     No longer open Tor ControlPort 9051 on Whonix-Gateway.
-    
+
     No longer required, since tor-arm now supports Tor cookie file authentication.
-    
+
     We don't care about Vidalia, since it has long been deprecated and removed from Debian.
-    
+
     control-port-filter-python also uses Tor cookie file authentication.
 
 commit 4c87a6aa5a079932186f9fe797fe54e37197b762
@@ -4433,7 +4439,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Aug 4 23:04:38 2016 +0000
 
     monitor /var/lib/tor/lock using access rights modifications
-    
+
     https://phabricator.whonix.org/T537
 
 commit 7fb0b9c86c71df9fdb607e5aa1fcf05834b671cc
@@ -4441,21 +4447,21 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Aug 3 22:22:01 2016 +0000
 
     update /usr/share/tor/tor-service-defaults-torrc
-    
+
     For compatibility with Tor version 0.2.8.6-1~d80.jessie+1.
-    
+
     /var/run/tor/control was no longer created and Tor throwing a warning.
-    
+
     Aug 03 21:56:34.000 [warn] Permissions on directory /var/run/tor are too permissive.
     Aug 03 21:56:34.000 [warn] Before Tor can create a control socket in "/var/run/tor/control", the directory "/var/run/tor" needs to exist, and to be accessible only by the user and group account that is running Tor.  (On some Unix systems, anybody who can list a socket can connect to it, so Tor is being careful.)
-    
+
     Which resulted in a follow up issues:
     - control-port-filter-proxy-python no longer working
     - whonixcheck error: Tor's Control Port could not be reached!
     - broken Tor Browser new identity button
-    
+
     Thanks to freeman, torjunkie and temple for reporting this issue!
-    
+
     https://forums.whonix.org/t/error-tor-bootstrap-result
 
 commit 5703999aa7b2dd98d86a4b1b231c38bc95ec167f
@@ -4475,9 +4481,9 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Jun 1 16:42:17 2016 +0000
 
     Updated Tor Browser port comments.
-    
+
     Thanks to singsong for the report!
-    
+
     https://forums.whonix.org/t/tor-browser-tor-browser-bundle-ports
 
 commit e97314a24166718351a35a82b599e827c01d9fdc
@@ -4499,7 +4505,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Thu Apr 14 23:32:40 2016 +0000
 
     Merge pull request #4 from 3n7r0p1/patch-1
-    
+
     Update tor-service-defaults-torrc.anondist
 
 commit c301753b9c31a429a98d04b4986bfb9966011cdf
@@ -4507,7 +4513,7 @@ Author: 3n7r0p1 <3n7r0py@riseup.net>
 Date:   Thu Apr 14 23:19:52 2016 +0000
 
     Update tor-service-defaults-torrc.anondist
-    
+
     Provide stream isolation for multiple identities / connections in Tor Messenger.
     Similar to Instant Messenger SocksPort 9103.
 
@@ -4522,7 +4528,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Apr 13 17:02:30 2016 +0000
 
     no longer download from deb.torproject.org because it gets uploaded to Whonix repo
-    
+
     https://phabricator.whonix.org/T472
 
 commit 950b9c4edfc840a89fad630f3df14835c413789f
@@ -4530,7 +4536,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Sat Apr 9 15:30:00 2016 +0000
 
     added anon-info - shows Tor apt repository status and Tor package version
-    
+
     https://phabricator.whonix.org/T472
 
 commit 026714c9c09934505c6a0180c26e25430d2300e5
@@ -4544,9 +4550,9 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Apr 6 20:10:59 2016 +0000
 
     download packages tor and tor-geoipdb from The The Project's apt repository
-    
+
     using apt-during-apt
-    
+
     thereby abolished previous chroot scripts for doing that
 
 commit 51cc21ec024cd28b690936386b59f8051ba2770a
@@ -4566,7 +4572,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Wed Dec 9 19:16:27 2015 +0000
 
     open Tor reload/restart/stop and tor-arm starters maximized by default in Konsole
-    
+
     https://phabricator.whonix.org/T451
 
 commit a93be97087ee78edf5239550baf95cab8d14f02b
@@ -4593,7 +4599,7 @@ Author: troubadoour <trobador@riseup.net>
 Date:   Fri Nov 27 21:48:17 2015 +0000
 
     usr.bin.obffproxy.anondist
-    
+
     Separate anondist profile for obfsproxy.
     When in system_tor anondist, the additional apparmor lines
     are not read on first use of scramblesuit.
@@ -4629,7 +4635,7 @@ Date:   Tue Nov 24 12:24:38 2015 +0000
     (1700_install-packages) The Tor Project's deb repository with Tor 0.2.7 is
     added only afterwards. (2300_run-chroot-scripts-post-d) This workaround can
     likely be removed once Whonix is based on Debian stretch.
-    
+
     https://github.com/Whonix/anon-gw-anonymizer-config/pull/3
 
 commit 5309347a9fe9a63569eafb22aee1474732dba6d0
@@ -4645,7 +4651,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Tue Nov 24 11:54:28 2015 +0000
 
     Merge pull request #3 from rustybird/KeepAliveIsolateSOCKSAuth
-    
+
     Use KeepAliveIsolateSOCKSAuth against TB fingerprinting
 
 commit 50057f729b099bb0a356c12474295fd897acdf03
@@ -4659,14 +4665,14 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Sun Nov 22 23:37:28 2015 +0000
 
     enable Transparent Proxy Ports for Whonix-Gateway by default
-    
+
     TransPort 127.0.0.1:9041
     DnsPort 127.0.0.1:5400
-    
+
     But still not enable transparent proxying by default in Whonix-Gateway firewall
     settings. This is required so we can
     'redirect tinyproxy traffic to 127.0.0.1 instead to qubes-netvm-gateway'.
-    
+
     https://phabricator.whonix.org/T434
 
 commit 70efe1ca2691bba480391bf10e9ac0fef3d4d2d3
@@ -4730,7 +4736,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Jul 10 16:14:01 2015 +0200
 
     Merge pull request #1 from HulaHoopWhonix/patch-2
-    
+
     Tor data desktop file
 
 commit b0b35d2b02dd13976bc6be04f9ae65e3bc66ee83
@@ -4739,7 +4745,7 @@ Author: Patrick Schleizer <adrelanos@riseup.net>
 Date:   Fri Jul 10 16:13:55 2015 +0200
 
     Merge pull request #2 from HulaHoopWhonix/patch-3
-    
+
     Create tordata
 
 commit f975ee319d13f5972779a22c329dc91dc417a33b
