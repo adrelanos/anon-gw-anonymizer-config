@@ -1,3 +1,40 @@
+commit dd270227a1ea0187c47c387d964cc4026a35e88d
+Merge: 6982579 96f711d
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sat Aug 1 04:33:45 2026 -0400
+
+    Merge remote-tracking branch 'refs/remotes/org-ai-assisted/master'
+
+commit 96f711db603ca0294be0b0058a04bd9b9570c225
+Merge: 6982579 5c88e00
+Author: assisted-by-ai (Bot Account) (Machine Account) <228987186+assisted-by-ai@users.noreply.github.com>
+Date:   Fri Jul 31 15:45:58 2026 -0400
+
+    Merge pull request #2 from org-ai-assisted/ai/codeql-python
+
+    ci: add file-based CodeQL python lane
+
+commit 5c88e008fe2978bb8e379fb17f0c6e2ce7bd9e8a
+Author: claude (dev142 b93fb2c6-e15f-4d45-8566-f3ded893b70e) <noreply@anthropic.com>
+Date:   Fri Jul 31 15:05:57 2026 -0400
+
+    ci: add file-based CodeQL python lane
+
+    Propagate consumer-codeql-python.yml byte-identically from
+    developer-meta-files/consumer-templates. anon-gw-anonymizer-config ships real product Python (tor-wait-for-network) that had no python CodeQL
+    analysis.
+
+    build-mode none; push/PR/workflow_dispatch triggers. No dm-consumer.yml
+    section required (reusable soft-skips an absent section).
+
+    Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+
+commit 69825791acbbe69e5afaa33c32fd3684dd95459a
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Tue Jul 21 11:13:13 2026 +0000
+
+    bumped changelog version
+
 commit e86a02260681d54c01b19cd7bb8027bdf170d650
 Merge: d4828df 5a2247a
 Author: Patrick Schleizer <adrelanos@whonix.org>
