@@ -12,13 +12,27 @@
 #### meta end
 
 set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
-cat /etc/motd
+## These shortcuts are launched in their own terminal window and end in a long
+## 'sleep' so the user can read the result; the pre-existing 'true "$?"' shows
+## the status was deliberately swallowed. Keep every command non-fatal, or
+## errexit closes the window on failure and the error is never seen.
 
-leaprun stop-tor
+cat /etc/motd || true
 
-leaprun tor-status
-true "$?"
+leaprun stop-tor || true
+
+## Capture the real status rather than '|| true' + '$?', which would always
+## read 0 and make this xtrace breadcrumb useless.
+tor_status_exit_code=0
+leaprun tor-status || tor_status_exit_code="$?"
+true "${tor_status_exit_code}"
 
 true "Feel free to close this window."
 

@@ -8,183 +8,190 @@
 
 #set -x
 
-set -e
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+## anon-gw-anonymizer-config Depends on helper-scripts.
+# shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/has.sh
+source /usr/libexec/helper-scripts/has.sh
 
 error_handler() {
    local exit_code="$?"
-   echo "ERROR: exit_code: $exit_code | BASH_COMMAND: $BASH_COMMAND"
+   printf '%s\n' "ERROR: exit_code: ${exit_code} | BASH_COMMAND: ${BASH_COMMAND}"
    exit 1
 }
 
 trap error_handler ERR
 
-SCRIPTNAME="$(basename "$BASH_SOURCE")"
+SCRIPTNAME="$(basename "${BASH_SOURCE[0]}")"
 
 if [ "$(id -u)" != "0" ]; then
-    echo "ERROR: This must be run as root (sudo)!"
-    echo "INFO: You can start $SCRIPTNAME by entering..."
-    echo "      sudo $SCRIPTNAME"
+    printf '%s\n' "ERROR: This must be run as root (sudo)!"
+    printf '%s\n' "INFO: You can start ${SCRIPTNAME} by entering..."
+    printf '%s\n' "      sudo ${SCRIPTNAME}"
     exit 1
 fi
 
-[ -n "$hsname" ] || hsname="hidden_service"
+hsname="${hsname:-hidden_service}"
 
-[ -n "$hsport" ] || hsport=80
+hsport="${hsport:-80}"
 
-[ -n "$virtport" ] || virtport=80
+virtport="${virtport:-80}"
 
-[ -n "$hsversion" ] || hsversion=3
+hsversion="${hsversion:-3}"
 
-[ -n "$tor_autogen_root_folder" ] || tor_autogen_root_folder="/var/lib/tor_autogen"
-[ -n "$tor_autogen_hs_folder" ] || tor_autogen_hs_folder="/var/lib/tor_autogen/${hsname}"
+tor_autogen_root_folder="${tor_autogen_root_folder:-/var/lib/tor_autogen}"
+tor_autogen_hs_folder="${tor_autogen_hs_folder:-/var/lib/tor_autogen/${hsname}}"
 
-[ -n "$hsdir" ] || hsdir="/var/lib/tor/${hsname}"
-[ -n "$onion_url_file" ] || onion_url_file="${hsdir}/hostname"
-[ -n "$authorized_clients_folder" ] || authorized_clients_folder="${hsdir}/authorized_clients"
+hsdir="${hsdir:-/var/lib/tor/${hsname}}"
+onion_url_file="${onion_url_file:-${hsdir}/hostname}"
+authorized_clients_folder="${authorized_clients_folder:-${hsdir}/authorized_clients}"
 
-[ -n "$torconfdir" ] || torconfdir="/usr/local/etc/torrc.d"
+torconfdir="${torconfdir:-/usr/local/etc/torrc.d}"
 
-[ -n "$torconffile" ] || torconffile="${torconfdir}/43_${hsname}_hs_autogen.conf"
+torconffile="${torconffile:-${torconfdir}/43_${hsname}_hs_autogen.conf}"
 
-[ -n "$torunit" ] || torunit="tor@default"
+torunit="${torunit:-tor@default}"
 
-[ -n "$unitaction" ] || unitaction="reload"
-[ -n "$unitruntest" ] || unitruntest="is-active"
+unitaction="${unitaction:-reload}"
+unitruntest="${unitruntest:-is-active}"
 
-[ -n "$unittool" ] || unittool="systemctl"
+unittool="${unittool:-systemctl}"
 
-[ -n "$unitcmd" ] || unitcmd="$unittool $unitaction $torunit"
+unitcmd="${unitcmd:-${unittool} ${unitaction} ${torunit}}"
 
-[ -n "$sleep_seconds_after_reload" ] || sleep_seconds_after_reload="5"
+sleep_seconds_after_reload="${sleep_seconds_after_reload:-5}"
 
-[ -n "$unitruntestcmd" ] || unitruntestcmd="$unittool $unitruntest $torunit"
+unitruntestcmd="${unitruntestcmd:-${unittool} ${unitruntest} ${torunit}}"
 
-[ -n "$tor_user" ] || tor_user="debian-tor"
-[ -n "$tor_group" ] || tor_group="debian-tor"
+tor_user="${tor_user:-debian-tor}"
+tor_group="${tor_group:-debian-tor}"
 
-[ -n "$client" ] || client="1"
+client="${client:-1}"
 
-[ -n "$private_key_file" ] || private_key_file="${tor_autogen_hs_folder}/${client}_private_key.pem"
-[ -n "$public_key_file" ] || public_key_file="${tor_autogen_hs_folder}/${client}_public_key.pem"
+private_key_file="${private_key_file:-${tor_autogen_hs_folder}/${client}_private_key.pem}"
+public_key_file="${public_key_file:-${tor_autogen_hs_folder}/${client}_public_key.pem}"
 
-[ -n "$home_folder_auth_private_file" ] || home_folder_auth_private_file="/home/user/${client}.auth_private"
+home_folder_auth_private_file="${home_folder_auth_private_file:-/home/user/${client}.auth_private}"
 
-[ -n "$auth_private_file" ] || auth_private_file="${tor_autogen_hs_folder}/${client}.auth_private"
+auth_private_file="${auth_private_file:-${tor_autogen_hs_folder}/${client}.auth_private}"
 
-[ -n "$base_32_private" ] || base_32_private="${tor_autogen_hs_folder}/${client}_private_key.base32"
-[ -n "$base_32_public" ] || base_32_public="${tor_autogen_hs_folder}/${client}_public_key.base32"
+base_32_private="${base_32_private:-${tor_autogen_hs_folder}/${client}_private_key.base32}"
+base_32_public="${base_32_public:-${tor_autogen_hs_folder}/${client}_public_key.base32}"
 
-[ -n "$client_authorization_file_name" ] || client_authorization_file_name="${client}.auth"
-[ -n "$client_authorization_full_path" ] || client_authorization_full_path="${tor_autogen_hs_folder}/${client_authorization_file_name}"
+client_authorization_file_name="${client_authorization_file_name:-${client}.auth}"
+client_authorization_full_path="${client_authorization_full_path:-${tor_autogen_hs_folder}/${client_authorization_file_name}}"
 
-[ -n "$tor_user_sudo" ] || tor_user_sudo="sudo --non-interactive -u $tor_user"
+tor_user_sudo="${tor_user_sudo:-sudo --non-interactive -u ${tor_user}}"
 
-if [ "$ip" = "" ]; then
-   if command -v qubesdb-read &>/dev/null ; then
+if [ "${ip}" = "" ]; then
+   if has qubesdb-read ; then
       ip="$(qubesdb-read /qubes-ip)"
    else
       ip=10.152.152.11
    fi
 fi
 
-which basez tail tr cat grep tee openssl mkdir chown cp sudo id groups "$unittool" sleep >/dev/null
+has basez tail tr cat grep tee openssl mkdir chown cp sudo id groups "${unittool}" sleep
 
-id "$tor_user" >/dev/null
-groups "$tor_group" >/dev/null
+id "${tor_user}" >/dev/null
+groups "${tor_group}" >/dev/null
 
-if ! $unitruntestcmd &>/dev/null ; then
-   echo "ERROR: Tor is not running. Start Tor first."
+if ! ${unitruntestcmd} &>/dev/null ; then
+   printf '%s\n' "ERROR: Tor is not running. Start Tor first."
    exit 1
 fi
 
-test -d "$torconfdir"
-rm -f "$torconffile"
-touch "$torconffile"
+test -d "${torconfdir}"
+safe-rm -f -- "${torconffile}"
+touch "${torconffile}"
 
-echo "\
+printf '%s\n' "\
 # This file is generated by: $0
 # User configuration should go to /usr/local/etc/torrc.d/50_user.conf, not here.
-# However, deleting this file will be fine since a new plain file will be generated the next time you run $SCRIPTNAME
+# However, deleting this file will be fine since a new plain file will be generated the next time you run ${SCRIPTNAME}
 
-HiddenServiceDir $hsdir
+HiddenServiceDir ${hsdir}
 HiddenServicePort ${virtport} ${ip}:${hsport}
 HiddenServiceVersion ${hsversion}
-" | tee "$torconffile" >/dev/null
+" | tee "${torconffile}" >/dev/null
 
-echo "INFO: Created torconffile '$torconffile'."
-echo "INFO: Reloading Tor."
+printf '%s\n' "INFO: Created torconffile '${torconffile}'."
+printf '%s\n' "INFO: Reloading Tor."
 
 ## Reload Tor to so Tor will create onion_url_file.
 ## by default:
 ## systemctl reload tor@default
-$unitcmd
+${unitcmd}
 
-echo "INFO: Giving Tor $sleep_seconds_after_reload seconds to create hidden service file."
+printf '%s\n' "INFO: Giving Tor ${sleep_seconds_after_reload} seconds to create hidden service file."
 
-sleep "$sleep_seconds_after_reload"
+sleep "${sleep_seconds_after_reload}"
 
-onion_url="$(cat "$onion_url_file")"
+onion_url="$(cat "${onion_url_file}")"
 
-onionname="$(echo "$onion_url" | str_replace ".onion" "")"
+onionname="$(printf '%s\n' "${onion_url}" | str_replace ".onion" "")"
 
-mkdir -p "$tor_autogen_root_folder"
-chown "${tor_user}:${tor_group}" "$tor_autogen_root_folder"
+mkdir -p "${tor_autogen_root_folder}"
+chown "${tor_user}:${tor_group}" "${tor_autogen_root_folder}"
 
-$tor_user_sudo mkdir -p "$tor_autogen_hs_folder"
+${tor_user_sudo} mkdir -p "${tor_autogen_hs_folder}"
 
-pushd "$tor_autogen_hs_folder" >/dev/null
+pushd "${tor_autogen_hs_folder}" >/dev/null
 
 ## Based on:
 ## https://tor.stackexchange.com/questions/19221/how-to-setup-client-authorization-for-v3-onion-services
 
 ## Using OpenSSL 1.1 or later, generate a new X25519 private key.
 ## This will produce a PEM-encoded private key file, private-key.pem
-$tor_user_sudo openssl genpkey -algorithm x25519 -out "$private_key_file"
+${tor_user_sudo} openssl genpkey -algorithm x25519 -out "${private_key_file}"
 
 ## Using the newly generated private key file, generate a corresponding public key file, public-key.pem:
-$tor_user_sudo openssl pkey -in "$private_key_file" -pubout -outform PEM -out "$public_key_file"
+${tor_user_sudo} openssl pkey -in "${private_key_file}" -pubout -outform PEM -out "${public_key_file}"
 
 ## Now that you have both the private and public parts of your keypair,
 ## first convert the private part from its PEM-encoded format into a Base32
 ## encoded string for use in your Tor client's .auth_private file:
-cat "$private_key_file" | \
-   grep -v " PRIVATE KEY" | \
+grep -v " PRIVATE KEY" < "${private_key_file}" | \
    basez --base64pem --decode | \
    tail --bytes 32 | \
    basez --base32 | \
    tr -d '=' | \
-   $tor_user_sudo tee "$base_32_private" >/dev/null
+   ${tor_user_sudo} tee "${base_32_private}" >/dev/null
 
 ## Visitors need to be provided with.
-echo -n "$onionname:descriptor:x25519:" | \
-   cat - "$base_32_private" | \
-   $tor_user_sudo tee "$auth_private_file" >/dev/null
+printf '%s' "${onionname}:descriptor:x25519:" | \
+   cat - "${base_32_private}" | \
+   ${tor_user_sudo} tee "${auth_private_file}" >/dev/null
 
-cat "$public_key_file" | \
-   grep -v " PUBLIC KEY" | \
+grep -v " PUBLIC KEY" < "${public_key_file}" | \
    basez --base64pem --decode | \
    tail --bytes 32 | \
    basez --base32 | \
    tr -d '=' | \
-   $tor_user_sudo tee "$base_32_public" >/dev/null
+   ${tor_user_sudo} tee "${base_32_public}" >/dev/null
 
-echo -n "descriptor:x25519:" | \
-   cat - "$base_32_public" | \
-   $tor_user_sudo tee "$client_authorization_full_path" >/dev/null
+printf '%s' "descriptor:x25519:" | \
+   cat - "${base_32_public}" | \
+   ${tor_user_sudo} tee "${client_authorization_full_path}" >/dev/null
 
-$tor_user_sudo mkdir -p "$authorized_clients_folder"
+${tor_user_sudo} mkdir -p "${authorized_clients_folder}"
 
-$tor_user_sudo cp "$client_authorization_full_path" "${authorized_clients_folder}/"
+${tor_user_sudo} cp "${client_authorization_full_path}" "${authorized_clients_folder}/"
 
-echo "INFO: Installed \".auth\" file (public key) '$client_authorization_full_path' to '$client_authorization_full_path' to allow client '$client' to access hsname '$hsname' onion_url '$onion_url'."
+printf '%s\n' "INFO: Installed \".auth\" file (public key) '${client_authorization_full_path}' to '${client_authorization_full_path}' to allow client '${client}' to access hsname '${hsname}' onion_url '${onion_url}'."
 
-echo "INFO: Reloading Tor again to activate \".auth\" (public key) file for client '$client'."
+printf '%s\n' "INFO: Reloading Tor again to activate \".auth\" (public key) file for client '${client}'."
 
 ## Reload Tor to so Tor will load client_authorization_full_path.
 ## by default:
 ## systemctl reload tor@default
-$unitcmd
+${unitcmd}
 
-echo "INFO: You need to provide client '$client' with \".auth_private\" file (private key) '$auth_private_file'."
+printf '%s\n' "INFO: You need to provide client '${client}' with \".auth_private\" file (private key) '${auth_private_file}'."
 
-echo "INFO: Visitors that use Whonix could store '$auth_private_file' in '$home_folder_auth_private_file' and then run 'sudo sourcefile=$home_folder_auth_private_file anon-server-to-client-install'."
+printf '%s\n' "INFO: Visitors that use Whonix could store '${auth_private_file}' in '${home_folder_auth_private_file}' and then run 'sudo sourcefile=${home_folder_auth_private_file} anon-server-to-client-install'."

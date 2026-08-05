@@ -5,57 +5,61 @@
 
 #set -x
 
-set -e
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
 shopt -s nullglob
 
 error_handler() {
    local exit_code="$?"
-   echo "ERROR: exit_code: $exit_code | BASH_COMMAND: $BASH_COMMAND"
+   printf '%s\n' "ERROR: exit_code: ${exit_code} | BASH_COMMAND: ${BASH_COMMAND}"
    exit 1
 }
 
 trap error_handler ERR
 
-SCRIPTNAME="$(basename "$BASH_SOURCE")"
+SCRIPTNAME="$(basename "${BASH_SOURCE[0]}")"
 
 print_profile(){
-  if [ "$show" = "--show" ]; then
-    echo "===================================================================="
-    echo "BEGIN PROFILE: ${profile}"
-    echo "--------------------------------------------------------------------"
+  if [ "${show}" = "--show" ]; then
+    printf '%s\n' "===================================================================="
+    printf '%s\n' "BEGIN PROFILE: ${profile}"
+    printf '%s\n' "--------------------------------------------------------------------"
     cat "${profile}"
-    echo "--------------------------------------------------------------------"
-    echo "END PROFILE: ${profile}"
-    echo "===================================================================="
+    printf '%s\n' "--------------------------------------------------------------------"
+    printf '%s\n' "END PROFILE: ${profile}"
+    printf '%s\n' "===================================================================="
   else
-    echo "${profile}"
+    printf '%s\n' "${profile}"
   fi
 }
 
 usage(){
-  echo "usage: ${0##*/}: --available|--used [--show]"
+  printf '%s\n' "usage: ${0##*/}: --available|--used [--show]"
   exit 0
 }
 
-option="$1"
-show="$2"
+option="${1:-}"
+show="${2:-}"
 
-if [ "$option" = "--used" ]; then
+if [ "${option}" = "--used" ]; then
   for profile in \
     /etc/onion-grater-merger.d/*.yml \
     /usr/local/etc/onion-grater-merger.d/*.yml
   do
-    echo "${profile}" | grep -F "*" && continue
+    printf '%s\n' "${profile}" | grep -F "*" && continue
     print_profile
   done
-elif [ "$option" = "--available" ]; then
+elif [ "${option}" = "--available" ]; then
   for profile in \
     /usr/share/doc/onion-grater-merger/examples/*.yml
   do
-    echo "${profile}" | grep -F "*" && continue
+    printf '%s\n' "${profile}" | grep -F "*" && continue
     print_profile
   done
 else
   usage
 fi
-

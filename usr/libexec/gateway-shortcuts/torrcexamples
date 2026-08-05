@@ -12,5 +12,11 @@
 #### meta end
 
 set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
-xdg-open /usr/share/anon-gw-anonymizer-config/torrc.examples
+xdg-open /usr/share/anon-gw-anonymizer-config/torrc.examples || true
