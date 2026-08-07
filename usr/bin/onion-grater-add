@@ -14,6 +14,9 @@ shopt -s shift_verbose
 
 ## anon-gw-anonymizer-config Depends on helper-scripts.
 # shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/has.sh
+## Sibling repo: absent in an isolated CI checkout, so shellcheck cannot
+## follow it there. The source= path above still documents where it lives.
+# shellcheck disable=SC1091
 source /usr/libexec/helper-scripts/has.sh
 shopt -s nullglob
 
