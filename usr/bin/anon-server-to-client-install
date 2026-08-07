@@ -47,7 +47,11 @@ unitcmd="${unitcmd:-${unittool} ${unitaction} ${torunit}}"
 
 unitruntestcmd="${unitruntestcmd:-${unittool} ${unitruntest} ${torunit}}"
 
-user_name="${user_name:-${SUDO_USER}}"
+## '${SUDO_USER:-}', not '${SUDO_USER}': a nested default protects only the
+## OUTER name. SUDO_USER is unset when this runs as root directly rather than
+## through sudo, and the inner expansion aborted even though the outer one had
+## a fallback.
+user_name="${user_name:-${SUDO_USER:-}}"
 
 tor_user="${tor_user:-debian-tor}"
 tor_group="${tor_group:-debian-tor}"

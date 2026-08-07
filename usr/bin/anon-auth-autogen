@@ -91,6 +91,10 @@ client_authorization_full_path="${client_authorization_full_path:-${tor_autogen_
 
 tor_user_sudo="${tor_user_sudo:-sudo --non-interactive -u ${tor_user}}"
 
+## Overridable from the environment; the guard below is what handles it being
+## absent, so it must not abort before reaching it.
+ip="${ip:-}"
+
 if [ "${ip}" = "" ]; then
    if has qubesdb-read ; then
       ip="$(qubesdb-read /qubes-ip)"

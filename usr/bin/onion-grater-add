@@ -39,7 +39,9 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-profile_name="$1"
+## '${1:-}': with no argument at all the unset read aborted BEFORE the
+## "profile name is empty" guard below could report it.
+profile_name="${1:-}"
 
 if [ "${profile_name}" = "" ]; then
    printf '%s\n' "ERROR: syntax: sudo ${SCRIPTNAME} profile-name"
