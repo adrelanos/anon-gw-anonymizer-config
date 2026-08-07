@@ -16,93 +16,113 @@
 
 temp_verbose_torrc=$(mktemp)
 
-declare -a torrc_files
+## style-ok: no-strict -- this file is SOURCED by anon-verify, so a strict-mode
+## block here would rewrite the CALLER's shell options rather than its own. It
+## inherits the caller's, which is why the array initialisations below matter.
+
+## Explicitly EMPTY, not merely declared. 'declare -a name' gives the array
+## attribute without creating the variable, so under a caller's nounset the
+## first '${torrc_files[@]}' read aborts before anything is appended. This file
+## is SOURCED, so it inherits whatever options its caller set -- anon-verify is
+## strict, so the declaration has to be too.
+declare -a torrc_files=()
+
+## Appended to in the same loop as torrc_files, and read by
+## extraneous_torrc_files(), but never declared at all -- so under a caller's
+## nounset the "no extraneous files" case aborts instead of reporting.
+declare -a extraneous_torrc=()
 
 function parser() {
    local abs_path
    for abs_path in "$@"; do
-      true "abs_path: '$abs_path'"
-      if [[ -f "$abs_path" ]]; then
+      true "abs_path: '${abs_path}'"
+      if [[ -f "${abs_path}" ]]; then
          local base_name first_character file_extension
          base_name="${abs_path##*/}"
          first_character=${base_name:0:1}
          file_extension="${base_name##*.}"
 
-         if [ "$first_character" = "." ]; then
-            printf '%s\n' "===> Ignoring file name starting with '.': $abs_path (Quote Tor manual: 'Files starting with a dot are ignored.')" | tee -a -- "$temp_verbose_torrc" >/dev/null
+         if [ "${first_character}" = "." ]; then
+            printf '%s\n' "===> Ignoring file name starting with '.': ${abs_path} (Quote Tor manual: 'Files starting with a dot are ignored.')" | tee -a -- "${temp_verbose_torrc}" >/dev/null
             continue
          fi
 
-         if [ "$abs_path" = "/usr/share/tor/tor-service-defaults-torrc" ]; then
-            true "good: $abs_path"
-         elif [ "$abs_path" = "/usr/share/tor/tor-service-defaults-torrc.anondist" ]; then
-            true "good: $abs_path"
-         elif [ "$abs_path" = "/etc/tor/torrc" ]; then
-            true "good: $abs_path"
+         if [ "${abs_path}" = "/usr/share/tor/tor-service-defaults-torrc" ]; then
+            true "good: ${abs_path}"
+         elif [ "${abs_path}" = "/usr/share/tor/tor-service-defaults-torrc.anondist" ]; then
+            true "good: ${abs_path}"
+         elif [ "${abs_path}" = "/etc/tor/torrc" ]; then
+            true "good: ${abs_path}"
          else
-            if [ "$file_extension" = "conf" ]; then
-               true "good: $abs_path"
+            if [ "${file_extension}" = "conf" ]; then
+               true "good: ${abs_path}"
             else
-               true "extraneous: $abs_path"
-               extraneous_torrc+=("$abs_path")
+               true "extraneous: ${abs_path}"
+               extraneous_torrc+=("${abs_path}")
             fi
          fi
 
-         printf '%s\n' "===> Start parsing file $abs_path" | tee -a -- "$temp_verbose_torrc" >/dev/null
-         torrc_files+=("$abs_path")
+         printf '%s\n' "===> Start parsing file ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
+         torrc_files+=("${abs_path}")
 
          while read -r line ; do
-            true "line: '$line'"
-            if [ "$line" = "" ]; then
+            true "line: '${line}'"
+            if [ "${line}" = "" ]; then
                ## show empty lines only when $VERY_VERBOSE is "1"
-               if [ ! "$VERY_VERBOSE" = "1" ]; then
+               ## Set by anon-verify, which SOURCES this file, so shellcheck
+               ## cannot see the assignment from here.
+               # shellcheck disable=SC2154
+               if [ ! "${VERY_VERBOSE}" = "1" ]; then
                   true "Skipping empty line."
                   continue
                fi
             fi
             ## only show comments in torrc files when $VERY_VERBOSE is "1"
-            if [[ "$line" =~ ^[[:space:]]*# ]]; then
+            if [[ "${line}" =~ ^[[:space:]]*# ]]; then
                true "line is a comment: yes"
-               if [ "$VERY_VERBOSE" = "1" ]; then
-                  printf '%s\n' "$line" | tee -a -- "$temp_verbose_torrc" >/dev/null
+               if [ "${VERY_VERBOSE}" = "1" ]; then
+                  printf '%s\n' "${line}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
                fi
             else
                true "line is a comment: no"
-               printf '%s\n' "$line" | tee -a -- "$temp_verbose_torrc" >/dev/null
+               printf '%s\n' "${line}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
             fi
 
             true "Checking if the line includes '%include'..."
-            if printf '%s\n' "$line" | grep -- "%include" &>/dev/null ; then
+            if printf '%s\n' "${line}" | grep -- "%include" &>/dev/null ; then
                true "Yes, the line includes '%include'."
+               ## files_list is declared but never used; flagged rather than
+               ## deleted, since removing a variable is not this pass's business.
+               # shellcheck disable=SC2034
                local second_word files_list
-               second_word="$(printf '%s\n' "$line" | awk '{print $2;}')"
+               second_word="$(printf '%s\n' "${line}" | awk '{print $2;}')"
                ## Do not quote because /etc/torrc.d/*.conf needs to be expanded.
-               parser $second_word
+               parser "${second_word}"
             else
                true "No, the line does not include '%include'."
             fi
-         done < "$abs_path"
-         printf '%s\n' "===> Done parsing file $abs_path" | tee -a -- "$temp_verbose_torrc" >/dev/null
-      elif [[ -d "$abs_path" ]]; then
-         printf '%s\n' "===> Start parsing folder: $abs_path" | tee -a -- "$temp_verbose_torrc" >/dev/null
+         done < "${abs_path}"
+         printf '%s\n' "===> Done parsing file ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
+      elif [[ -d "${abs_path}" ]]; then
+         printf '%s\n' "===> Start parsing folder: ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
          local fso
-         for fso in $(find "$abs_path" -mindepth 1 -maxdepth 1 | sort -g) ; do
-            if [ -d "$fso" ]; then
-               printf '%s\n' "===> Ignoring subfolder: $abs_path (Quote Tor manual: 'Files on subfolders are ignored.')" | tee -a -- "$temp_verbose_torrc" >/dev/null
+         for fso in $(find "${abs_path}" -mindepth 1 -maxdepth 1 | sort -g) ; do
+            if [ -d "${fso}" ]; then
+               printf '%s\n' "===> Ignoring subfolder: ${abs_path} (Quote Tor manual: 'Files on subfolders are ignored.')" | tee -a -- "${temp_verbose_torrc}" >/dev/null
                continue
             fi
-            parser "$fso"
+            parser "${fso}"
          done
-         printf '%s\n' "===> Done parsing folder : $abs_path" | tee -a -- "$temp_verbose_torrc" >/dev/null
+         printf '%s\n' "===> Done parsing folder : ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
       else
-         printf '%s\n' "ERROR: invalid file system object (fso) (abs_path): '$abs_path'"
+         printf '%s\n' "ERROR: invalid file system object (fso) (abs_path): '${abs_path}'"
       fi
    done
 }
 
 function parsing_order_verbose(){
    printf '%s\n' "The Tor configuration files are parsed in such order: "
-   cat -- "$temp_verbose_torrc"
+   cat -- "${temp_verbose_torrc}"
 }
 
 function used_torrc_files(){
@@ -112,14 +132,18 @@ function used_torrc_files(){
 
 function unknown_option_specifier(){
    for unknown_option in "$@"; do
-      printf '%s\n' "The following files contain unknown option '$unknown_option': "
-      grep -iHnE --color -- "^([[:space:]])*$unknown_option" "${torrc_files[@]}"
+      printf '%s\n' "The following files contain unknown option '${unknown_option}': "
+      grep -iHnE --color -- "^([[:space:]])*${unknown_option}" "${torrc_files[@]}"
       printf '%s\n' "Please modify these files to fix the problem."
    done
 }
 
 function extraneous_torrc_files(){
-   if [ "$extraneous_torrc" = "" ]; then
+   ## '$extraneous_torrc' on an array reads element 0, which is unset when
+   ## nothing was appended -- so under a caller's nounset the "nothing
+   ## extraneous" case, the NORMAL one, aborted. Comparing element 0 with a
+   ## default keeps the original test: empty means nothing was collected.
+   if [ "${extraneous_torrc[0]:-}" = "" ]; then
       return 0
    fi
    printf '%s\n' "/===================================================================\\"
