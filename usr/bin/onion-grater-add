@@ -49,6 +49,13 @@ if [ "${profile_name}" = "" ]; then
 fi
 
 
+## Assigned only on the exact-match branch or inside the glob loop below. With
+## nullglob an unknown profile matches neither, so this stayed unset and the
+## '-f' test aborted instead of printing the script's own 'does not exist'
+## error. Empty is what it expanded to before strict mode, and '[ ! -f "" ]' is
+## true, which is exactly the intended path.
+profile_file_source=""
+
 if [ -f "/usr/share/doc/onion-grater-merger/examples/${profile_name}.yml" ]; then
    profile_file_source="/usr/share/doc/onion-grater-merger/examples/${profile_name}.yml"
 else

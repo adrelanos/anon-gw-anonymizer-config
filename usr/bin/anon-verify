@@ -130,7 +130,12 @@ function generate_report() {
       printf '%s\n' "|                    Tor Concise Report                             |"
       printf '%s\n' "\\===================================================================/"
       printf '%s\n' "Below warns and errors must be fixed before you can use Tor:"
-      grep -E -w -h -i --color '\[warn\]|\[err\]' <<< "${tor_verify_config_output}"
+      ## '|| true' because a verifier that failed WITHOUT emitting a tagged
+      ## line -- leaprun unable to invoke it at all, for one -- makes this grep
+      ## match nothing. Aborting here kills the Full Report below, which is the
+      ## only place the actual failure would have been visible. The identical
+      ## grep on the next line already had the guard.
+      grep -E -w -h -i --color '\[warn\]|\[err\]' <<< "${tor_verify_config_output}" || true
       tor_verify_config_output_concise="$(grep -E -w -h -i --color '\[warn\]|\[err\]' <<< "${tor_verify_config_output}" 2>&1)" || true
    fi
 

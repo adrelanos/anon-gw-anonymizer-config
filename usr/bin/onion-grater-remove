@@ -48,6 +48,12 @@ if [ "${profile_name}" = "" ]; then
    exit 1
 fi
 
+## Assigned only when an unlink actually succeeds. An already-absent profile
+## leaves the glob loop empty -- and a FAILED unlink leaves it unset too -- so
+## the test below aborted instead of reaching the deliberate 'None removed'
+## branch. Empty is what it expanded to before strict mode.
+removed=""
+
 if [ -f "/usr/local/etc/onion-grater-merger.d/${profile_name}.yml" ]; then
    profile_file_target="/usr/local/etc/onion-grater-merger.d/${profile_name}.yml"
    if unlink "${profile_file_target}" &>/dev/null ; then

@@ -97,7 +97,14 @@ function parser() {
                local second_word files_list
                second_word="$(printf '%s\n' "${line}" | awk '{print $2;}')"
                ## Do not quote because /etc/torrc.d/*.conf needs to be expanded.
-               parser "${second_word}"
+               ## '${second_word}' is DELIBERATELY UNQUOTED. A torrc
+               ## '%include /etc/torrc.d/*.conf' puts a glob here, and quoting
+               ## it passes the wildcard to parser literally -- the literal path
+               ## is neither a file nor a directory, so every included file
+               ## silently vanishes from the used-files and detailed-error
+               ## reports. Word splitting is wanted for the same reason.
+               # shellcheck disable=SC2086
+               parser ${second_word}
             else
                true "No, the line does not include '%include'."
             fi
