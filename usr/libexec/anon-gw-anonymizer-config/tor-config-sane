@@ -21,7 +21,26 @@
 ##   to skip repeated initial wait logic during the same boot
 #### meta end
 
+## 'set -x' is NOT debug leftovers: every 'true "..."' line below produces no
+## output on its own, so xtrace IS this script's entire reporting.
 set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+## This script had NO 'set -e', so every step could fail silently and it still
+## reported END and exited 0 -- the unit went green while Tor was left
+## misconfigured.
+##
+## Making a step fatal instead would be worse: a failure in the first step would
+## skip the later, independent ones. So each step still RUNS, and its failure is
+## recorded here; the script exits non-zero at the end if any of them failed.
+## The unit is Type=oneshot and only 'Before=tor.service' with no Requires=, so a
+## failed exit surfaces the problem without blocking Tor from starting.
+exit_code=0
 
 true "$0: START"
 
@@ -39,7 +58,11 @@ qubes_replace_ips_maybe() {
   ## XXX: Duplicated in 'qubes-whonix-postinit.service'.
   ## Replace IP addresses in known configuration files / scripts with the
   ## currently discovered IP addresses.
-  /usr/lib/qubes-whonix/replace-ips
+  if ! /usr/lib/qubes-whonix/replace-ips ; then
+    true "$0: ERROR: Qubes replace-ips FAILED."
+    exit_code=1
+    return 0
+  fi
   true "$0: INFO: Qubes replace-ips done."
 }
 
@@ -54,7 +77,11 @@ tor_wait_for_network_maybe() {
   fi
 
   true "$0: INFO: Not running inside Qubes Template. Waiting for IPv6 on eth1... Waiting for IPv6 eth1..."
-  timeout --kill-after 1 10 /usr/lib/systemd/systemd-networkd-wait-online --interface eth1 --ipv6 --operational-state=routable
+  ## Timing out is the EXPECTED outcome when the host has no IPv6 -- that is the
+  ## very condition the generate-tor-service-defaults-torrc-anondist step below
+  ## exists to detect and configure around. Under errexit an unhandled non-zero
+  ## here would abort before that step ever ran.
+  timeout --kill-after 1 10 /usr/lib/systemd/systemd-networkd-wait-online --interface eth1 --ipv6 --operational-state=routable || true
   ## Also use 'tor-wait-for-network'.
   ## 'tor-wait-for-network'. has its own timeout functionality built in.
   ## May be unnecessary. Disabled for now.
@@ -70,14 +97,22 @@ tor_wait_for_network_maybe() {
   true "$0: INFO: IPv6 eth1 done."
 }
 
-/usr/libexec/helper-scripts/repair-torrc
+if ! /usr/libexec/helper-scripts/repair-torrc ; then
+  true "$0: ERROR: repair-torrc FAILED."
+  exit_code=1
+fi
 
 tor_wait_for_network_maybe
 
 true "$0: INFO: Conditionally disable IPv6, if unavailable... Running generate-tor-service-defaults-torrc-anondist..."
-/usr/libexec/anon-gw-anonymizer-config/generate-tor-service-defaults-torrc-anondist
+if ! /usr/libexec/anon-gw-anonymizer-config/generate-tor-service-defaults-torrc-anondist ; then
+  true "$0: ERROR: generate-tor-service-defaults-torrc-anondist FAILED."
+  exit_code=1
+fi
 true "$0: INFO: generate-tor-service-defaults-torrc-anondist done."
 
 qubes_replace_ips_maybe
 
 true "$0: END"
+
+exit "${exit_code}"
