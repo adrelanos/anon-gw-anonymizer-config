@@ -103,7 +103,7 @@ if [ "${ip}" = "" ]; then
    fi
 fi
 
-has basez tail tr cat grep tee openssl mkdir chown cp sudo id groups "${unittool}" sleep
+has basez tail tr cat grep tee openssl mkdir chmod chown cp sudo id groups "${unittool}" sleep
 
 id "${tor_user}" >/dev/null
 groups "${tor_group}" >/dev/null
@@ -148,6 +148,35 @@ chown "${tor_user}:${tor_group}" "${tor_autogen_root_folder}"
 
 ${tor_user_sudo} mkdir -p "${tor_autogen_hs_folder}"
 
+## Private key material must be readable only by the Tor user. Files are
+## created through 'tee' and 'openssl', which both honor the inherited umask,
+## so the mode is set explicitly rather than left to the caller's environment.
+secure_private_file() {
+   local private_file
+   for private_file in "$@" ; do
+      [ -e "${private_file}" ] || continue
+      ${tor_user_sudo} chmod 0600 -- "${private_file}"
+   done
+}
+
+## Keys from earlier runs were created world-readable. Tighten them here so an
+## already deployed key stops being exposed without waiting for regeneration.
+## Covers every client in the folder, not just the one being generated now.
+secure_existing_private_files() {
+   local private_file
+   shopt -s nullglob
+   for private_file in \
+      "${tor_autogen_hs_folder}"/*_private_key.pem \
+      "${tor_autogen_hs_folder}"/*_private_key.base32 \
+      "${tor_autogen_hs_folder}"/*.auth_private
+   do
+      ${tor_user_sudo} chmod 0600 -- "${private_file}"
+   done
+   shopt -u nullglob
+}
+
+secure_existing_private_files
+
 pushd "${tor_autogen_hs_folder}" >/dev/null
 
 ## Based on:
@@ -156,6 +185,8 @@ pushd "${tor_autogen_hs_folder}" >/dev/null
 ## Using OpenSSL 1.1 or later, generate a new X25519 private key.
 ## This will produce a PEM-encoded private key file, private-key.pem
 ${tor_user_sudo} openssl genpkey -algorithm x25519 -out "${private_key_file}"
+
+secure_private_file "${private_key_file}"
 
 ## Using the newly generated private key file, generate a corresponding public key file, public-key.pem:
 ${tor_user_sudo} openssl pkey -in "${private_key_file}" -pubout -outform PEM -out "${public_key_file}"
@@ -170,10 +201,14 @@ grep -v " PRIVATE KEY" < "${private_key_file}" | \
    tr -d '=' | \
    ${tor_user_sudo} tee "${base_32_private}" >/dev/null
 
+secure_private_file "${base_32_private}"
+
 ## Visitors need to be provided with.
 printf '%s' "${onionname}:descriptor:x25519:" | \
    cat - "${base_32_private}" | \
    ${tor_user_sudo} tee "${auth_private_file}" >/dev/null
+
+secure_private_file "${auth_private_file}"
 
 grep -v " PUBLIC KEY" < "${public_key_file}" | \
    basez --base64pem --decode | \

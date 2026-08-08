@@ -85,7 +85,7 @@ client_onion_auth_full_path="${client_onion_auth_full_path:-${client_onion_auth_
 
 tor_user_sudo="${tor_user_sudo:-sudo --non-interactive -u ${tor_user}}"
 
-has touch tee mkdir chown cp sudo id groups "${unittool}" sleep
+has touch tee mkdir chmod chown cp sudo id groups "${unittool}" sleep
 
 id "${tor_user}" >/dev/null
 groups "${tor_group}" >/dev/null
@@ -107,8 +107,24 @@ fi
 
 mkdir -p "${client_onion_auth_dir}"
 chown "${tor_user}:${tor_group}" "${client_onion_auth_dir}"
+
+## Keys installed by an earlier run kept whatever mode they were copied with.
+## Tighten them so an already deployed key stops being exposed, instead of
+## staying world-readable until it happens to be regenerated. Runs before the
+## copy below so it only ever sees pre-existing keys; the newly installed key
+## is chmod'ed separately, keeping the two paths independently testable.
+shopt -s nullglob
+for existing_auth_private_file in "${client_onion_auth_dir}"/*.auth_private ; do
+   chmod 0600 -- "${existing_auth_private_file}"
+done
+shopt -u nullglob
+
 cp "${sourcefile}" "${auth_private_file_full_target_path}"
 chown "${tor_user}:${tor_group}" "${auth_private_file_full_target_path}"
+
+## 'cp' preserves the source mode, and the sourcefile normally arrives in the
+## user's home folder world-readable, so the mode is set explicitly here.
+chmod 0600 -- "${auth_private_file_full_target_path}"
 
 printf '%s\n' "INFO: Installed \".auth_private\" file (private key) '${sourcefile}' to '${auth_private_file_full_target_path}'."
 
