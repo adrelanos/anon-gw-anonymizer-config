@@ -112,14 +112,20 @@ function parser() {
          printf '%s\n' "===> Done parsing file ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
       elif [[ -d "${abs_path}" ]]; then
          printf '%s\n' "===> Start parsing folder: ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
+         ## NUL-delimited, not '$(find ...)'. Unquoted command substitution
+         ## splits on whitespace, so a Tor config file named 'custom conf.conf'
+         ## became two nonexistent paths and was silently dropped from the
+         ## used-files and detailed-error reports -- the file was never parsed
+         ## and nothing said so. 'sort -z' keeps the -g ordering, which decides
+         ## which numbered torrc.d fragment wins.
          local fso
-         for fso in $(find "${abs_path}" -mindepth 1 -maxdepth 1 | sort -g) ; do
+         while IFS= read -r -d '' fso ; do
             if [ -d "${fso}" ]; then
                printf '%s\n' "===> Ignoring subfolder: ${abs_path} (Quote Tor manual: 'Files on subfolders are ignored.')" | tee -a -- "${temp_verbose_torrc}" >/dev/null
                continue
             fi
             parser "${fso}"
-         done
+         done < <(find "${abs_path}" -mindepth 1 -maxdepth 1 -print0 | sort -z -g)
          printf '%s\n' "===> Done parsing folder : ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
       else
          printf '%s\n' "ERROR: invalid file system object (fso) (abs_path): '${abs_path}'"
