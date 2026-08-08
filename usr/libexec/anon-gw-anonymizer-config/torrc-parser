@@ -140,7 +140,20 @@ function used_torrc_files(){
 function unknown_option_specifier(){
    for unknown_option in "$@"; do
       printf '%s\n' "The following files contain unknown option '${unknown_option}': "
-      grep -iHnE --color -- "^([[:space:]])*${unknown_option}" "${torrc_files[@]}"
+
+      ## An EMPTY torrc_files leaves grep with no file operands, so it reads
+      ## STDIN -- and anon-verify then HANGS instead of printing its diagnosis.
+      ## That is reachable today: anon-verify's tor_start_command is empty
+      ## (the function that set it is commented out), so parser() is called with
+      ## two empty paths and may discover nothing.
+      if [ "${#torrc_files[@]}" -eq 0 ]; then
+         printf '%s\n' "(none -- no Tor configuration files were found to search)"
+         continue
+      fi
+
+      ## '|| true' because finding no match is a normal answer here, not an
+      ## error, and this file is sourced into callers that run under errexit.
+      grep -iHnE --color -- "^([[:space:]])*${unknown_option}" "${torrc_files[@]}" || true
       printf '%s\n' "Please modify these files to fix the problem."
    done
 }

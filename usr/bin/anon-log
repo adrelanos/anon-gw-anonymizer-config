@@ -22,11 +22,16 @@ if [ -f /usr/libexec/helper-scripts/pre.bsh ]; then
   source /usr/libexec/helper-scripts/pre.bsh
 fi
 
+## '|| logN=""' because a FAILING journalctl -- no journal, no permission, unit
+## unknown -- fails the assignment, and under errexit that exited before the
+## '[ -z "${logN:-}" ]' handling below, which exists for exactly this outcome,
+## and before the diagnostic guidance this script is FOR. An empty result and a
+## failed query lead to the same place by design.
 cmd1="journalctl --boot --no-pager --output cat -u tor.service"
-log1="$(${cmd1})"
+log1="$(${cmd1})" || log1=""
 
 cmd2="journalctl --boot --no-pager --output cat -u tor@default.service"
-log2="$(${cmd2})"
+log2="$(${cmd2})" || log2=""
 
 ## Vanguards does not exist in Trixie any longer.
 #cmd3="journalctl --boot --no-pager --output cat -u vanguards.service"
