@@ -11,36 +11,48 @@
 ## Tor log parsing command line utility.
 #### meta end
 
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
 if [ -f /usr/libexec/helper-scripts/pre.bsh ]; then
   source /usr/libexec/helper-scripts/pre.bsh
 fi
 
+## '|| logN=""' because a FAILING journalctl -- no journal, no permission, unit
+## unknown -- fails the assignment, and under errexit that exited before the
+## '[ -z "${logN:-}" ]' handling below, which exists for exactly this outcome,
+## and before the diagnostic guidance this script is FOR. An empty result and a
+## failed query lead to the same place by design.
 cmd1="journalctl --boot --no-pager --output cat -u tor.service"
-log1="$($cmd1)"
+log1="$(${cmd1})" || log1=""
 
 cmd2="journalctl --boot --no-pager --output cat -u tor@default.service"
-log2="$($cmd2)"
+log2="$(${cmd2})" || log2=""
 
 ## Vanguards does not exist in Trixie any longer.
 #cmd3="journalctl --boot --no-pager --output cat -u vanguards.service"
 #log3="$($cmd3)"
 
-if [ -z "$log1" ]; then
+if [ -z "${log1:-}" ]; then
   log1="empty"
 fi
 
-if [ -z "$log2" ]; then
+if [ -z "${log2:-}" ]; then
   log2="empty"
 fi
 
-if [ -z "$log3" ]; then
+if [ -z "${log3:-}" ]; then
   log3="empty"
 fi
 
-if [ "$log2" = "empty" ]; then
-  echo "ERROR: Running command:
+if [ "${log2}" = "empty" ]; then
+  printf '%s\n' "ERROR: Running command:
 
-$cmd2
+${cmd2}
 
 failed! This program needs to be run as root:
 
@@ -70,41 +82,44 @@ fi
 log_full="\
 ${bold}tor.service:${reset}
 
-$log1
+${log1}
 
 ${bold}tor@default.service:${reset}
 
-$log2"
+${log2}"
 
 ## https://www.whonix.org/wiki/Tor#Non-Issues
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "New control connection opened.")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opening HTTP tunnel listener")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opened HTTP tunnel listener")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opened Socks listener")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opening Socks listener")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opening DNS listener")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opened DNS listener")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opening Transparent pf/netfilter listener")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opened Transparent pf/netfilter listener")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opening Control listener on /run/tor/control")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Opened Control listener on /run/tor/control")"
+## Each filter can legitimately remove every remaining line, and
+## 'grep --invert-match' then exits 1. Before strict mode that simply left
+## log_full empty; without '|| true' errexit would abort the whole report.
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "New control connection opened.")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opening HTTP tunnel listener")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opened HTTP tunnel listener")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opened Socks listener")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opening Socks listener")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opening DNS listener")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opened DNS listener")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opening Transparent pf/netfilter listener")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opened Transparent pf/netfilter listener")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opening Control listener on /run/tor/control")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Opened Control listener on /run/tor/control")" || true
 
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] You configured a non-loopback address")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "opening log file")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Parsing GEOIP IPv4 file /usr/share/tor/geoip.")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Parsing GEOIP IPv6 file /usr/share/tor/geoip6.")"
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] You configured a non-loopback address")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "opening log file")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Parsing GEOIP IPv4 file /usr/share/tor/geoip.")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Parsing GEOIP IPv6 file /usr/share/tor/geoip6.")" || true
 
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] New control connection opened.")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[warn] Socks version 71 not recognized. (This port is not an HTTP proxy; did you want to use HTTPTunnelPort?)")"
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] New control connection opened.")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[warn] Socks version 71 not recognized. (This port is not an HTTP proxy; did you want to use HTTPTunnelPort?)")" || true
 
 ## Use anon-verify instead.
 ## https://www.whonix.org/wiki/Tor#Configuration_Check
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Read configuration file")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Including configuration file")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Processing configuration path")"
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Read configuration file")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Including configuration file")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Processing configuration path")" || true
 
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[notice] Option 'DisableNetwork' used more than once; all but the last value will be ignored.")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[warn] Option 'ClientOnionAuthDir' used more than once; all but the last value will be ignored.")"
-log_full="$(echo "$log_full" | grep --invert-match --fixed-strings -- "[warn] Option 'DisableNetwork' used more than once; all but the last value will be ignored.")"
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[notice] Option 'DisableNetwork' used more than once; all but the last value will be ignored.")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[warn] Option 'ClientOnionAuthDir' used more than once; all but the last value will be ignored.")" || true
+log_full="$(printf '%s\n' "${log_full}" | grep --invert-match --fixed-strings -- "[warn] Option 'DisableNetwork' used more than once; all but the last value will be ignored.")" || true
 
-echo "$log_full"
+printf '%s\n' "${log_full}"
