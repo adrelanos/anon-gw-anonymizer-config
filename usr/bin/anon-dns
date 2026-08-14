@@ -15,9 +15,7 @@
 ## add
 ## remove
 
-## 'set -x' is NOT debug leftovers: the 'true "INFO: ..."' lines below produce
-## no output on their own, so xtrace IS this script's entire user-visible
-## reporting. Removing it would silence the tool.
+## xtrace is this script's user-visible reporting mechanism.
 set -x
 set -o errexit
 set -o nounset
@@ -26,11 +24,8 @@ set -o errtrace
 shopt -s inherit_errexit
 shopt -s shift_verbose
 
-## helper-scripts is a SIBLING package, so the source= path only resolves when
-## the whole packages/ tree is present. CI checks out this repo alone, where it
-## does not exist -- hence the SC1091 disable alongside it. The source= is still
-## worth keeping: it lets shellcheck follow the file in a full-tree checkout.
 # shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/as_root.sh
+## TODO: Only run shellcheck when in a full derivative-maker source tree.
 # shellcheck disable=SC1091
 source /usr/libexec/helper-scripts/as_root.sh
 # shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/has.sh
@@ -71,37 +66,18 @@ if [ "${1:-}" = "remove" ]; then
    exit 0
 fi
 
-## Deliberate environment override: the '[ -n ... ] ||' idiom below exists so a
-## caller can preset dns_server. Under nounset it has to be declared first.
-dns_server="${dns_server:-}"
-
-if [ "${dns_server}" = "" ]; then
-   if has qubesdb-read ; then
-      ## '|| true': qubesdb-read exits non-zero when qubesdb is not reachable,
-      ## and under errexit that killed the script outright. It can also succeed
-      ## while printing nothing.
-      dns_server="$(qubesdb-read /qubes-primary-dns || true)"
-
-      ## Do NOT fall back to 10.0.2.3 here. That address is the non-Qubes
-      ## default; on Qubes the primary DNS comes from qubesdb, so writing
-      ## 10.0.2.3 would point resolv.conf somewhere wrong and break DNS
-      ## silently. Failing loudly is the correct answer.
-      if [ "${dns_server}" = "" ]; then
-         printf '%s\n' "$0: ERROR: qubesdb-read /qubes-primary-dns returned nothing." >&2
-         printf '%s\n' "$0: ERROR: Refusing to guess a nameserver on Qubes. Set dns_server= to override." >&2
-         exit 1
-      fi
-   else
-      ## see /etc/resolv.conf
-      dns_server="10.0.2.3"
+if has qubesdb-read ; then
+   [ -n "${dns_server:-}" ] || dns_server="$(qubesdb-read /qubes-primary-dns || true)"
+   if [ "${dns_server}" = "" ]; then
+      printf '%s\n' "$0: ERROR: qubesdb-read /qubes-primary-dns returned nothing." >&2
+      ## Let's not tell the user "Set dns_server= to override", so that they
+      ## don't break things trying to work around a bug the wrong way.
+      printf '%s\n' "$0: ERROR: Refusing to guess a nameserver on Qubes." >&2
+      exit 1
    fi
-fi
-
-## Guards the whole chain: an empty value here would write a bare
-## "nameserver " line into /etc/resolv.conf.
-if [ "${dns_server}" = "" ]; then
-   printf '%s\n' "$0: ERROR: dns_server is empty, refusing to write resolv.conf." >&2
-   exit 1
+else
+   ## see /etc/resolv.conf
+   [ -n "${dns_server:-}" ] || dns_server="10.0.2.3"
 fi
 
 line_to_add_maybe="nameserver ${dns_server}"

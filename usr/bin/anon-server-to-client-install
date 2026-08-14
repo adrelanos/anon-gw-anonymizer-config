@@ -15,18 +15,16 @@ set -o errtrace
 shopt -s inherit_errexit
 shopt -s shift_verbose
 
-## anon-gw-anonymizer-config Depends on helper-scripts.
-##
-## 'has' is a FUNCTION defined here, not an executable. This file called it at
-## the 'has touch tee mkdir ...' preflight without ever sourcing the helper, so
-## every invocation died with 'has: command not found' before installing the
-## authorization. Its siblings anon-auth-autogen, anon-dns, onion-grater-add and
-## onion-grater-remove all source it; this one was missed.
 # shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/has.sh
 ## Sibling repo: absent in an isolated CI checkout, so shellcheck cannot
 ## follow it there. The source= path above still documents where it lives.
+##
+## TODO: Only run shellcheck when we have a full derivative-maker source tree.
 # shellcheck disable=SC1091
 source /usr/libexec/helper-scripts/has.sh
+
+# shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/strings.bsh
+source /usr/libexec/helper-scripts/strings.bsh
 
 error_handler() {
    local exit_code="$?"
@@ -45,45 +43,41 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-torconfdir="${torconfdir:-/usr/local/etc/torrc.d}"
+default_if_empty torconfdir "/usr/local/etc/torrc.d"
 
-torconffile="${torconffile:-${torconfdir}/43_clientonionauthdir.conf}"
+default_if_empty torconffile "${torconfdir}/43_clientonionauthdir.conf"
 
-torunit="${torunit:-tor@default}"
+default_if_empty torunit "tor@default"
 
-unitaction="${unitaction:-reload}"
-unitruntest="${unitruntest:-is-active}"
+default_if_empty unitaction "reload"
+default_if_empty unitruntest "is-active"
 
-unittool="${unittool:-systemctl}"
+default_if_empty unittool "systemctl"
 
-unitcmd="${unitcmd:-${unittool} ${unitaction} ${torunit}}"
+default_if_empty unitcmd "${unittool} ${unitaction} ${torunit}"
 
-unitruntestcmd="${unitruntestcmd:-${unittool} ${unitruntest} ${torunit}}"
+default_if_empty unitruntestcmd "${unittool} ${unitruntest} ${torunit}"
 
-## '${SUDO_USER:-}', not '${SUDO_USER}': a nested default protects only the
-## OUTER name. SUDO_USER is unset when this runs as root directly rather than
-## through sudo, and the inner expansion aborted even though the outer one had
-## a fallback.
-user_name="${user_name:-${SUDO_USER:-}}"
+default_if_empty user_name "${SUDO_USER:-}"
 
-tor_user="${tor_user:-debian-tor}"
-tor_group="${tor_group:-debian-tor}"
+default_if_empty tor_user "debian-tor"
+default_if_empty tor_group "debian-tor"
 
-client="${client:-1}"
+default_if_empty client "1"
 
-tor_dir="${tor_dir:-/var/lib/tor}"
+default_if_empty tor_dir "/var/lib/tor"
 
-client_onion_auth_dir="${client_onion_auth_dir:-${tor_dir}/authdir}"
+default_if_empty client_onion_auth_dir "${tor_dir}/authdir"
 
-auth_private_file_name="${auth_private_file_name:-${client}.auth_private}"
+default_if_empty auth_private_file_name "${client}.auth_private"
 
-sourcefile="${sourcefile:-/home/${user_name}/${auth_private_file_name}}"
+default_if_empty sourcefile "/home/${user_name}/${auth_private_file_name}"
 
-auth_private_file_full_target_path="${auth_private_file_full_target_path:-${client_onion_auth_dir}/${auth_private_file_name}}"
+default_if_empty auth_private_file_full_target_path "${client_onion_auth_dir}/${auth_private_file_name}"
 
-client_onion_auth_full_path="${client_onion_auth_full_path:-${client_onion_auth_dir}/${auth_private_file_name}}"
+default_if_empty client_onion_auth_full_path "${client_onion_auth_dir}/${auth_private_file_name}"
 
-tor_user_sudo="${tor_user_sudo:-sudo --non-interactive -u ${tor_user}}"
+default_if_empty tor_user_sudo "sudo --non-interactive -u ${tor_user}"
 
 has touch tee mkdir chmod chown cp sudo id groups "${unittool}" sleep
 
@@ -108,11 +102,7 @@ fi
 mkdir -p "${client_onion_auth_dir}"
 chown "${tor_user}:${tor_group}" "${client_onion_auth_dir}"
 
-## Keys installed by an earlier run kept whatever mode they were copied with.
-## Tighten them so an already deployed key stops being exposed, instead of
-## staying world-readable until it happens to be regenerated. Runs before the
-## copy below so it only ever sees pre-existing keys; the newly installed key
-## is chmod'ed separately, keeping the two paths independently testable.
+## Tighten permissions on existing key files.
 shopt -s nullglob
 for existing_auth_private_file in "${client_onion_auth_dir}"/*.auth_private ; do
    chmod 0600 -- "${existing_auth_private_file}"
@@ -121,9 +111,6 @@ shopt -u nullglob
 
 cp "${sourcefile}" "${auth_private_file_full_target_path}"
 chown "${tor_user}:${tor_group}" "${auth_private_file_full_target_path}"
-
-## 'cp' preserves the source mode, and the sourcefile normally arrives in the
-## user's home folder world-readable, so the mode is set explicitly here.
 chmod 0600 -- "${auth_private_file_full_target_path}"
 
 printf '%s\n' "INFO: Installed \".auth_private\" file (private key) '${sourcefile}' to '${auth_private_file_full_target_path}'."

@@ -21,13 +21,10 @@ shopt -s shift_verbose
 if [ ! -e /etc/apt/sources.list.d/torproject.sources ]; then
    printf '%s\n' "INFO: /etc/apt/sources.list.d/torproject.sources does not exist."
 else
-      ## A file with no matching lines makes this pipeline exit non-zero; before
-   ## strict mode that simply produced an empty list rather than aborting.
-   uncommented_lines="$(grep -v '#' /etc/apt/sources.list.d/torproject.sources | grep deb)" || true
+   uncommented_lines="$(grep -v '^[[:space:]]*#' /etc/apt/sources.list.d/torproject.sources | grep deb)" || true
    printf '%s\n' "INFO: /etc/apt/sources.list.d/torproject.sources uncommented lines:
 ${uncommented_lines}"
 fi
 
-## Absent package: previously reported an empty version instead of aborting.
 tor_version="$(dpkg-query --show --showformat='${Version}' "tor")" || true
 printf '%s\n' "INFO: version of the 'tor' package: ${tor_version}"

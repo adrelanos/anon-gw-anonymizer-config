@@ -15,12 +15,16 @@ set -o errtrace
 shopt -s inherit_errexit
 shopt -s shift_verbose
 
-## anon-gw-anonymizer-config Depends on helper-scripts.
 # shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/has.sh
 ## Sibling repo: absent in an isolated CI checkout, so shellcheck cannot
 ## follow it there. The source= path above still documents where it lives.
+##
+## TODO: Don't run shellcheck unless in a derivative-maker source tree.
 # shellcheck disable=SC1091
 source /usr/libexec/helper-scripts/has.sh
+
+# shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/strings.bsh
+source /usr/libexec/helper-scripts/strings.bsh
 
 error_handler() {
    local exit_code="$?"
@@ -39,61 +43,59 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-hsname="${hsname:-hidden_service}"
+default_if_empty hsname "hidden_service"
 
-hsport="${hsport:-80}"
+default_if_empty hsport "80"
 
-virtport="${virtport:-80}"
+default_if_empty virtport "80"
 
-hsversion="${hsversion:-3}"
+default_if_empty hsversion "3"
 
-tor_autogen_root_folder="${tor_autogen_root_folder:-/var/lib/tor_autogen}"
-tor_autogen_hs_folder="${tor_autogen_hs_folder:-/var/lib/tor_autogen/${hsname}}"
+default_if_empty tor_autogen_root_folder "/var/lib/tor_autogen"
+default_if_empty tor_autogen_hs_folder "/var/lib/tor_autogen/${hsname}"
 
-hsdir="${hsdir:-/var/lib/tor/${hsname}}"
-onion_url_file="${onion_url_file:-${hsdir}/hostname}"
-authorized_clients_folder="${authorized_clients_folder:-${hsdir}/authorized_clients}"
+default_if_empty hsdir "/var/lib/tor/${hsname}"
+default_if_empty onion_url_file "${hsdir}/hostname"
+default_if_empty authorized_clients_folder "${hsdir}/authorized_clients"
 
-torconfdir="${torconfdir:-/usr/local/etc/torrc.d}"
+default_if_empty torconfdir "/usr/local/etc/torrc.d"
 
-torconffile="${torconffile:-${torconfdir}/43_${hsname}_hs_autogen.conf}"
+default_if_empty torconffile "${torconfdir}/43_${hsname}_hs_autogen.conf"
 
-torunit="${torunit:-tor@default}"
+default_if_empty torunit "tor@default"
 
-unitaction="${unitaction:-reload}"
-unitruntest="${unitruntest:-is-active}"
+default_if_empty unitaction "reload"
+default_if_empty unitruntest "is-active"
 
-unittool="${unittool:-systemctl}"
+default_if_empty unittool "systemctl"
 
-unitcmd="${unitcmd:-${unittool} ${unitaction} ${torunit}}"
+default_if_empty unitcmd "${unittool} ${unitaction} ${torunit}"
 
-sleep_seconds_after_reload="${sleep_seconds_after_reload:-5}"
+default_if_empty sleep_seconds_after_reload "5"
 
-unitruntestcmd="${unitruntestcmd:-${unittool} ${unitruntest} ${torunit}}"
+default_if_empty unitruntestcmd "${unittool} ${unitruntest} ${torunit}"
 
-tor_user="${tor_user:-debian-tor}"
-tor_group="${tor_group:-debian-tor}"
+default_if_empty tor_user "debian-tor"
+default_if_empty tor_group "debian-tor"
 
-client="${client:-1}"
+default_if_empty client "1"
 
-private_key_file="${private_key_file:-${tor_autogen_hs_folder}/${client}_private_key.pem}"
-public_key_file="${public_key_file:-${tor_autogen_hs_folder}/${client}_public_key.pem}"
+default_if_empty private_key_file "${tor_autogen_hs_folder}/${client}_private_key.pem"
+default_if_empty public_key_file "${tor_autogen_hs_folder}/${client}_public_key.pem"
 
-home_folder_auth_private_file="${home_folder_auth_private_file:-/home/user/${client}.auth_private}"
+default_if_empty home_folder_auth_private_file "/home/user/${client}.auth_private"
 
-auth_private_file="${auth_private_file:-${tor_autogen_hs_folder}/${client}.auth_private}"
+default_if_empty auth_private_file "${tor_autogen_hs_folder}/${client}.auth_private"
 
-base_32_private="${base_32_private:-${tor_autogen_hs_folder}/${client}_private_key.base32}"
-base_32_public="${base_32_public:-${tor_autogen_hs_folder}/${client}_public_key.base32}"
+default_if_empty base_32_private "${tor_autogen_hs_folder}/${client}_private_key.base32"
+default_if_empty base_32_public "${tor_autogen_hs_folder}/${client}_public_key.base32"
 
-client_authorization_file_name="${client_authorization_file_name:-${client}.auth}"
-client_authorization_full_path="${client_authorization_full_path:-${tor_autogen_hs_folder}/${client_authorization_file_name}}"
+default_if_empty client_authorization_file_name "${client}.auth"
+default_if_empty client_authorization_full_path "${tor_autogen_hs_folder}/${client_authorization_file_name}"
 
-tor_user_sudo="${tor_user_sudo:-sudo --non-interactive -u ${tor_user}}"
+default_if_empty tor_user_sudo "sudo --non-interactive -u ${tor_user}"
 
-## Overridable from the environment; the guard below is what handles it being
-## absent, so it must not abort before reaching it.
-ip="${ip:-}"
+default_if_empty ip ""
 
 if [ "${ip}" = "" ]; then
    if has qubesdb-read ; then
@@ -148,34 +150,16 @@ chown "${tor_user}:${tor_group}" "${tor_autogen_root_folder}"
 
 ${tor_user_sudo} mkdir -p "${tor_autogen_hs_folder}"
 
-## Private key material must be readable only by the Tor user. Files are
-## created through 'tee' and 'openssl', which both honor the inherited umask,
-## so the mode is set explicitly rather than left to the caller's environment.
-secure_private_file() {
-   local private_file
-   for private_file in "$@" ; do
-      [ -e "${private_file}" ] || continue
-      ${tor_user_sudo} chmod 0600 -- "${private_file}"
-   done
-}
-
-## Keys from earlier runs were created world-readable. Tighten them here so an
-## already deployed key stops being exposed without waiting for regeneration.
-## Covers every client in the folder, not just the one being generated now.
-secure_existing_private_files() {
-   local private_file
-   shopt -s nullglob
-   for private_file in \
-      "${tor_autogen_hs_folder}"/*_private_key.pem \
-      "${tor_autogen_hs_folder}"/*_private_key.base32 \
-      "${tor_autogen_hs_folder}"/*.auth_private
-   do
-      ${tor_user_sudo} chmod 0600 -- "${private_file}"
-   done
-   shopt -u nullglob
-}
-
-secure_existing_private_files
+## Lock down permissions on existing private key files.
+shopt -s nullglob
+for existing_private_key_file in \
+   "${tor_autogen_hs_folder}"/*_private_key.pem \
+   "${tor_autogen_hs_folder}"/*_private_key.base32 \
+   "${tor_autogen_hs_folder}"/*.auth_private ; do
+   [ -e "${existing_private_key_file}" ] || continue
+   chmod 0600 -- "${existing_private_key_file}"
+done
+shopt -u nullglob
 
 pushd "${tor_autogen_hs_folder}" >/dev/null
 
@@ -185,8 +169,7 @@ pushd "${tor_autogen_hs_folder}" >/dev/null
 ## Using OpenSSL 1.1 or later, generate a new X25519 private key.
 ## This will produce a PEM-encoded private key file, private-key.pem
 ${tor_user_sudo} openssl genpkey -algorithm x25519 -out "${private_key_file}"
-
-secure_private_file "${private_key_file}"
+chmod 0600 -- "${private_key_file}"
 
 ## Using the newly generated private key file, generate a corresponding public key file, public-key.pem:
 ${tor_user_sudo} openssl pkey -in "${private_key_file}" -pubout -outform PEM -out "${public_key_file}"
@@ -200,15 +183,13 @@ grep -v " PRIVATE KEY" < "${private_key_file}" | \
    basez --base32 | \
    tr -d '=' | \
    ${tor_user_sudo} tee "${base_32_private}" >/dev/null
-
-secure_private_file "${base_32_private}"
+chmod 0600 -- "${base_32_private}"
 
 ## Visitors need to be provided with.
 printf '%s' "${onionname}:descriptor:x25519:" | \
    cat - "${base_32_private}" | \
    ${tor_user_sudo} tee "${auth_private_file}" >/dev/null
-
-secure_private_file "${auth_private_file}"
+chmod 0600 -- "${auth_private_file}"
 
 grep -v " PUBLIC KEY" < "${public_key_file}" | \
    basez --base64pem --decode | \

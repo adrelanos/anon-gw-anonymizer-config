@@ -22,8 +22,7 @@ error_handler() {
 trap error_handler ERR
 
 ## Pre-existing: assigned for consistency with the sibling scripts but not
-## referenced here. Left in place rather than removed as part of a
-## strict-mode pass.
+## referenced here.
 # shellcheck disable=SC2034
 SCRIPTNAME="$(basename "${BASH_SOURCE[0]}")"
 

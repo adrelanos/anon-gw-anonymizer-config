@@ -21,13 +21,47 @@ shopt -s shift_verbose
 
 SCRIPTNAME="$(basename -- "${BASH_SOURCE[0]}")"
 
-## Interpolated into the user-facing report below, but never assigned in this
-## package. systemcheck's preparation.bsh sets it -- anon-verify does not source
-## that, so here it has always expanded to EMPTY and the instruction renders
-## with a blank prefix ("  Terminal" rather than "Start Menu / System / Terminal").
-## Defaulted to empty to keep exactly that behaviour: sourcing another package's
-## fragment to populate it is a design change, not a strict-mode fix.
-start_menu_instructions_system_first_part=""
+## CODE DUPLICATION: Adapted from systemcheck's preparation.bsh.
+if has qubesdb-read; then
+   ## Qubes OS detected.
+   qubes_name_of_vm="$(qubesdb-read /name)" || true
+   qubes_name_of_vm="$(sanitize-string -- 255 "$qubes_name_of_vm")"
+
+   ## '/qubes-vm-type' is either 'AppVM', 'ProxyVM', 'NetVM' or 'TemplateVM'
+   qubes_vm_type="$(qubesdb-read /qubes-vm-type)" || true
+   qubes_vm_type="$(sanitize-string -- 255 "$qubes_vm_type")"
+
+   qubes_starter_first_part="ServiceVM"
+   if [ "$qubes_type_of_vm" = "AppVM" ]; then
+      qubes_starter_first_part="Domain"
+   fi
+   if [ "$qubes_type_of_vm" = "TemplateVM" ]; then
+      qubes_starter_first_part="Template"
+   fi
+
+   ## '/qubes-vm-persistence' outputs:
+   ## - 'full' (TemplateVM or Standalone),
+   ## - 'rw-only' (TemplateBasedVM), or
+   ## - 'none' (DispVM).
+   qubes_vm_persistence="$(qubesdb-read /qubes-vm-persistence)" || true
+
+   if test -f /run/qubes/this-is-templatevm ; then
+      start_menu_instructions_system_first_part="dom0 - Start Menu - Template: <code>$qubes_name_of_vm</code> -"
+   else
+      if [ "$qubes_vm_persistence" = "full" ]; then
+         start_menu_instructions_system_first_part="dom0 - Start Menu - Domain: <code>$qubes_name_of_vm</code> -"
+      elif [ "$qubes_vm_persistence" = "rw-only" ]; then
+         start_menu_instructions_system_first_part="dom0 - Start Menu - $qubes_starter_first_part: <code>$qubes_name_of_vm</code> -"
+      elif [ "$qubes_vm_persistence" = "none" ]; then
+         start_menu_instructions_system_first_part="dom0 - Start Menu - $qubes_starter_first_part: <code>$qubes_name_of_vm</code> -"
+      else
+         start_menu_instructions_system_first_part="dom0 - Start Menu - $qubes_starter_first_part: <code>$qubes_name_of_vm</code> -"
+      fi
+   fi
+else
+   ## Non-Qubes OS detected.
+   start_menu_instructions_system_first_part="Start Menu - System -"
+fi
 
 ## Read by the two '=~' tests that extract --defaults-torrc and -f from it, but
 ## the get_tor_start_command() that assigned it -- and its call site -- are both
@@ -54,8 +88,6 @@ parse_cmd_options() {
 
    while :
    do
-      ## The loop runs until the arguments are exhausted, so its last iteration
-      ## reads an unset $1 by design -- the '*' arm below is what ends it.
       case "${1:-}" in
          -h | --help | -\?)
             printf '%s\n' "${HELP_MSG}"
@@ -130,11 +162,6 @@ function generate_report() {
       printf '%s\n' "|                    Tor Concise Report                             |"
       printf '%s\n' "\\===================================================================/"
       printf '%s\n' "Below warns and errors must be fixed before you can use Tor:"
-      ## '|| true' because a verifier that failed WITHOUT emitting a tagged
-      ## line -- leaprun unable to invoke it at all, for one -- makes this grep
-      ## match nothing. Aborting here kills the Full Report below, which is the
-      ## only place the actual failure would have been visible. The identical
-      ## grep on the next line already had the guard.
       grep -E -w -h -i --color '\[warn\]|\[err\]' <<< "${tor_verify_config_output}" || true
       tor_verify_config_output_concise="$(grep -E -w -h -i --color '\[warn\]|\[err\]' <<< "${tor_verify_config_output}" 2>&1)" || true
    fi
@@ -182,11 +209,6 @@ ${start_menu_instructions_system_first_part} Terminal
    source /usr/libexec/anon-gw-anonymizer-config/torrc-parser
 
    ## extract default_torrc file and -f torrc file
-   ## Both are assigned only when the regex matches, and both are read
-   ## unconditionally by the parser call below. tor_start_command is empty (see
-   ## its declaration), so neither regex has ever matched and parser() has
-   ## always been called with two empty arguments -- which is the behaviour
-   ## being preserved here, not a new default.
    default_torrc=""
    f_torrc=""
    if [[ "${tor_start_command}" =~ (--defaults-torrc )([^ ]*) ]]; then

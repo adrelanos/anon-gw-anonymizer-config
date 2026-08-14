@@ -12,14 +12,17 @@ set -o errtrace
 shopt -s inherit_errexit
 shopt -s shift_verbose
 
-## anon-gw-anonymizer-config Depends on helper-scripts.
 # shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/has.sh
 ## Sibling repo: absent in an isolated CI checkout, so shellcheck cannot
 ## follow it there. The source= path above still documents where it lives.
+##
+## TODO: Only run shellcheck in a full derivative-maker source tree.
 # shellcheck disable=SC1091
 source /usr/libexec/helper-scripts/has.sh
 ## Provides validate_safe_filename, used on profile_name below.
 # shellcheck source=../../../../kicksecure/helper-scripts/usr/libexec/helper-scripts/strings.bsh
+##
+## TODO: See above TODO.
 # shellcheck disable=SC1091
 source /usr/libexec/helper-scripts/strings.bsh
 shopt -s nullglob
@@ -43,8 +46,6 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-## '${1:-}': with no argument at all the unset read aborted BEFORE the
-## "profile name is empty" guard below could report it.
 profile_name="${1:-}"
 
 if [ "${profile_name}" = "" ]; then
@@ -52,24 +53,11 @@ if [ "${profile_name}" = "" ]; then
    exit 1
 fi
 
-## This script runs as root and builds a filesystem path out of this argument.
-## Quoting stops word splitting but NOT path components: '../../../../etc/foo'
-## would make the unlink below remove /etc/foo.yml. validate_safe_filename
-## rejects path separators, '.', '..', any embedded '..', control characters, a
-## leading '-' and over-length values.
-##
-## It takes the VARIABLE NAME, not the value.
 if ! validate_safe_filename profile_name ; then
    printf '%s\n' "ERROR: invalid profile name: '${profile_name}'" >&2
    exit 1
 fi
 
-
-## Assigned only on the exact-match branch or inside the glob loop below. With
-## nullglob an unknown profile matches neither, so this stayed unset and the
-## '-f' test aborted instead of printing the script's own 'does not exist'
-## error. Empty is what it expanded to before strict mode, and '[ ! -f "" ]' is
-## true, which is exactly the intended path.
 profile_file_source=""
 
 if [ -f "/usr/share/doc/onion-grater-merger/examples/${profile_name}.yml" ]; then

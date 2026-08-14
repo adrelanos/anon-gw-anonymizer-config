@@ -16,20 +16,9 @@
 
 temp_verbose_torrc=$(mktemp)
 
-## style-ok: no-strict -- this file is SOURCED by anon-verify, so a strict-mode
-## block here would rewrite the CALLER's shell options rather than its own. It
-## inherits the caller's, which is why the array initialisations below matter.
+## style-ok: no-strict -- this file is sourced, not executed.
 
-## Explicitly EMPTY, not merely declared. 'declare -a name' gives the array
-## attribute without creating the variable, so under a caller's nounset the
-## first '${torrc_files[@]}' read aborts before anything is appended. This file
-## is SOURCED, so it inherits whatever options its caller set -- anon-verify is
-## strict, so the declaration has to be too.
 declare -a torrc_files=()
-
-## Appended to in the same loop as torrc_files, and read by
-## extraneous_torrc_files(), but never declared at all -- so under a caller's
-## nounset the "no extraneous files" case aborts instead of reporting.
 declare -a extraneous_torrc=()
 
 function parser() {
@@ -69,7 +58,7 @@ function parser() {
             true "line: '${line}'"
             if [ "${line}" = "" ]; then
                ## show empty lines only when $VERY_VERBOSE is "1"
-               ## Set by anon-verify, which SOURCES this file, so shellcheck
+               ## Set by anon-verify, which sources this file, so shellcheck
                ## cannot see the assignment from here.
                # shellcheck disable=SC2154
                if [ ! "${VERY_VERBOSE}" = "1" ]; then
@@ -91,18 +80,11 @@ function parser() {
             true "Checking if the line includes '%include'..."
             if printf '%s\n' "${line}" | grep -- "%include" &>/dev/null ; then
                true "Yes, the line includes '%include'."
-               ## files_list is declared but never used; flagged rather than
-               ## deleted, since removing a variable is not this pass's business.
-               # shellcheck disable=SC2034
-               local second_word files_list
+               local second_word
                second_word="$(printf '%s\n' "${line}" | awk '{print $2;}')"
                ## Do not quote because /etc/torrc.d/*.conf needs to be expanded.
                ## '${second_word}' is DELIBERATELY UNQUOTED. A torrc
-               ## '%include /etc/torrc.d/*.conf' puts a glob here, and quoting
-               ## it passes the wildcard to parser literally -- the literal path
-               ## is neither a file nor a directory, so every included file
-               ## silently vanishes from the used-files and detailed-error
-               ## reports. Word splitting is wanted for the same reason.
+               ## '%include /etc/torrc.d/*.conf' puts a glob here.
                # shellcheck disable=SC2086
                parser ${second_word}
             else
@@ -112,12 +94,6 @@ function parser() {
          printf '%s\n' "===> Done parsing file ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
       elif [[ -d "${abs_path}" ]]; then
          printf '%s\n' "===> Start parsing folder: ${abs_path}" | tee -a -- "${temp_verbose_torrc}" >/dev/null
-         ## NUL-delimited, not '$(find ...)'. Unquoted command substitution
-         ## splits on whitespace, so a Tor config file named 'custom conf.conf'
-         ## became two nonexistent paths and was silently dropped from the
-         ## used-files and detailed-error reports -- the file was never parsed
-         ## and nothing said so. 'sort -z' keeps the -g ordering, which decides
-         ## which numbered torrc.d fragment wins.
          local fso
          while IFS= read -r -d '' fso ; do
             if [ -d "${fso}" ]; then
@@ -147,29 +123,20 @@ function unknown_option_specifier(){
    for unknown_option in "$@"; do
       printf '%s\n' "The following files contain unknown option '${unknown_option}': "
 
-      ## An EMPTY torrc_files leaves grep with no file operands, so it reads
-      ## STDIN -- and anon-verify then HANGS instead of printing its diagnosis.
-      ## That is reachable today: anon-verify's tor_start_command is empty
-      ## (the function that set it is commented out), so parser() is called with
-      ## two empty paths and may discover nothing.
       if [ "${#torrc_files[@]}" -eq 0 ]; then
          printf '%s\n' "(none -- no Tor configuration files were found to search)"
          continue
       fi
 
-      ## '|| true' because finding no match is a normal answer here, not an
-      ## error, and this file is sourced into callers that run under errexit.
-      grep -iHnE --color -- "^([[:space:]])*${unknown_option}" "${torrc_files[@]}" || true
+      if ! grep -iHnE --color -- "^([[:space:]])*${unknown_option}" "${torrc_files[@]}" ; then
+         printf '%s\n' "(none -- no files containing '${unknown_option}' were matched)"
+      fi
       printf '%s\n' "Please modify these files to fix the problem."
    done
 }
 
 function extraneous_torrc_files(){
-   ## '$extraneous_torrc' on an array reads element 0, which is unset when
-   ## nothing was appended -- so under a caller's nounset the "nothing
-   ## extraneous" case, the NORMAL one, aborted. Comparing element 0 with a
-   ## default keeps the original test: empty means nothing was collected.
-   if [ "${extraneous_torrc[0]:-}" = "" ]; then
+   if [ "${#extraneous_torrc[@]}" -eq 0 ]; then
       return 0
    fi
    printf '%s\n' "/===================================================================\\"
