@@ -12,17 +12,24 @@
 #### meta end
 
 set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
-cat /etc/motd
+cat /etc/motd || true
 
 if leaprun tor-status &>/dev/null ; then
-   leaprun reload-tor
+   leaprun reload-tor || true
 else
-   leaprun restart-tor
+   leaprun restart-tor || true
 fi
 
-leaprun tor-status
-true "$?"
+tor_status_exit_code=0
+leaprun tor-status || tor_status_exit_code="$?"
+true "${tor_status_exit_code}"
 
 true "Feel free to close this window."
 

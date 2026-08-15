@@ -4,6 +4,12 @@
 ## See the file COPYING for copying conditions.
 
 set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
 set -o pipefail
 
 if [ "$(id -u)" != "0" ]; then
@@ -14,7 +20,7 @@ fi
 error_handler() {
    true "##############################"
    true "## ERROR detected!"
-   true "## BASH_COMMAND: $BASH_COMMAND"
+   true "## BASH_COMMAND: ${BASH_COMMAND}"
    true "## Please report this bug!"
    true "##############################"
 
@@ -28,7 +34,7 @@ config_file="/etc/torrc.d/65_leak_tests.conf"
 exit_function() {
    true "INFO: Listening for leaks stopped."
 
-   true "INFO: Reverting '$config_file' to original state."
+   true "INFO: Reverting '${config_file}' to original state."
 
    search="\
 ReachableDirAddresses *:80
@@ -40,7 +46,7 @@ FascistFirewall 1"
 #ReachableORAddresses *:443
 #FascistFirewall 1"
 
-   str_replace "$search" "$replace" "$config_file"
+   str_replace "${search}" "${replace}" "${config_file}"
 
    true "INFO: Reloading Tor, using normal settings again"
    systemctl --no-pager reload tor@default
@@ -51,7 +57,7 @@ trap "exit_function" EXIT
 true "INFO: Setting capabilities to run wireshark with user privileges."
 setcap cap_net_raw,cap_net_admin=eip /usr/bin/dumpcap
 
-true "INFO: Modifying '$config_file' for leak testing."
+true "INFO: Modifying '${config_file}' for leak testing."
 
 search="\
 #ReachableDirAddresses *:80
@@ -63,7 +69,7 @@ ReachableDirAddresses *:80
 ReachableORAddresses *:443
 FascistFirewall 1"
 
-str_replace "$search" "$replace" "$config_file"
+str_replace "${search}" "${replace}" "${config_file}"
 
 true "INFO: Restarting Tor, only using port 80 and 443..."
 systemctl --no-pager reload tor@default

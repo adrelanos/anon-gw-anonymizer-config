@@ -12,10 +12,16 @@
 #### meta end
 
 set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
-cat /etc/motd
+cat /etc/motd || true
 
-nyx
+nyx || true
 
 true "Feel free to close this window."
 
