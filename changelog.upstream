@@ -1,9 +1,716 @@
+commit 68ab4b6b7a68e5fbda0c782afd4e820e2701ae76
+Merge: 74af254 08f205b
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sat Aug 15 10:53:40 2026 -0400
+
+    Merge remote-tracking branch 'ArrayBolt3/arraybolt3/trixie'
+
+commit 08f205bc4559e88193a9c7badb0274ff7e95c7d4
+Author: Aaron Rainbolt <arraybolt3@gmail.com>
+Date:   Fri Aug 14 15:41:09 2026 -0400
+
+    Fixes, FIXMEs, TODOs
+
+commit 64f85b99a83feab9eb15a1d32c62e557c1c9667b
+Merge: 6982579 25098ff
+Author: Aaron Rainbolt <arraybolt3@gmail.com>
+Date:   Thu Aug 13 01:14:12 2026 -0400
+
+    Merge branch 'ai' into arraybolt3/trixie
+
+commit 25098ffe57a60c4ad781e1eb69bf5eee4600e1b7
+Author: claude (dev170 ad818220-b8bb-4205-b850-b65074e52454) <noreply@anthropic.com>
+Date:   Sun Aug 9 01:32:08 2026 -0400
+
+    tests: hand the auth_private mode check to the central suite
+
+    - now dist-ai anon-gw-anonymizer-config-tests/auth_private_mode_test.sh
+    - it resolves anon-server-to-client-install from the INSTALLED path by
+      default (ANON_GW_ANONYMIZER_CONFIG_REPO for a checkout); the copy here
+      walked '../../../bin' from its own location, so it always validated the
+      checkout it sat in
+    - and it runs under 'bwrap --unshare-user --uid 0' instead of demanding real
+      root, so the lane actually runs rather than refusing
+    - debian/*.install ships 'usr/*', so there is no entry to drop
+    - canaried in its new home: removing both 'chmod 0600' sites leaves modes
+      640 and 644, 0 pass 2 fail
+
+commit 169954b35f4f0639ba46af1332054c8e0009d7b3
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Sat Aug 8 06:30:36 2026 -0400
+
+    Write onion client auth private keys mode 0600
+
+    - anon-auth-autogen: the PEM private key, its base32 form and the
+      .auth_private file were created through openssl and tee, which honor the
+      inherited umask, so they landed world-readable.
+    - anon-server-to-client-install: cp preserves the source mode, and the
+      sourcefile normally arrives in the user's home folder world-readable.
+    - Both also tighten keys left behind by an earlier run. A code-only fix would
+      leave already deployed keys exposed until they happen to be regenerated.
+    - Test asserts the MODE of a file the installer wrote, not its exit code, and
+      covers the newly installed key and the pre-existing one independently.
+
+    ## AI-Assisted
+
+    Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+
+commit c749b86cad9eab2cdfe98ac5d58047bb0aa24423
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 23:00:21 2026 -0400
+
+    torrc-parser: a torrc.d filename with a space was silently dropped
+
+      for fso in $(find "${abs_path}" -mindepth 1 -maxdepth 1 | sort -g)
+
+    Unquoted command substitution splits on whitespace, so a Tor configuration file
+    named 'custom conf.conf' became TWO nonexistent paths. Neither exists, so
+    neither was parsed, and nothing reported the file missing -- it simply vanished
+    from the used-files and detailed-error reports.
+
+    NUL-delimited now, with 'sort -z' preserving the -g ordering that decides which
+    numbered torrc.d fragment wins.
+
+    Found by coderabbit.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+      2 pass, 0 fail
+
+      filename WITH a space is parsed   differ
+      ordinary filename still parsed    same
+
+    The assertion is on the path parser() actually RECEIVED, not on the loop having
+    run -- the old version runs the loop fine, it just hands it the wrong operands.
+
+    Canary: restoring the word-splitting form reproduces the defect exactly:
+
+      PARSED:[W/torrc.d/custom]
+      PARSED:[conf.conf]
+
+    one file arriving as two paths, neither of which exists.
+
+commit c95463ea835297b715bf97adf0ce98940b81510f
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 22:58:13 2026 -0400
+
+    anon-gw-anonymizer-config: a hang, and a journalctl failure that exited early
+
+    torrc-parser: unknown_option_specifier could HANG
+    --------------------------------------------------
+
+      grep -iHnE --color -- "^([[:space:]])*${unknown_option}" "${torrc_files[@]}"
+
+    With an EMPTY torrc_files that leaves grep no file operands, so it reads STDIN
+    and anon-verify blocks forever instead of printing the diagnosis it was asked
+    for.
+
+    That is reachable today, not hypothetical: anon-verify's tor_start_command is
+    permanently empty -- the get_tor_start_command() that assigned it is commented
+    out -- so parser() is called with two empty paths and may discover no files at
+    all.
+
+    Guarded, and the grep is now '|| true' as well: finding no match is a normal
+    answer, not an error, and this file is sourced into callers running errexit.
+
+    NOT done, deliberately: the reviewer suggests restoring a reliable source for
+    the --defaults-torrc and -f paths. That means reviving the commented-out
+    function, which would change WHICH torrc files anon-verify reports on. That is a
+    product decision for the maintainer, not a strict-mode fix. The hang is fixed;
+    the emptiness is reported.
+
+    anon-log: a failed journalctl exited before the guidance
+    ---------------------------------------------------------
+
+      log1="$(${cmd1})"
+
+    A failing journalctl -- no journal, no permission, unit unknown -- fails the
+    assignment, and under errexit that exited before the '[ -z "${logN:-}" ]'
+    handling that exists for exactly this outcome, and before the diagnostic
+    guidance this script is FOR. Both queries are '|| logN=""' now: an empty result
+    and a failed query lead to the same place by design.
+
+    Found by coderabbit.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+      2 pass, 0 fail
+
+      EMPTY torrc_files must not read stdin   old_hung=yes new_hung=no
+      populated torrc_files still greps       old_hung=no  new_hung=no
+
+    The hang IS the property, so stdin is a pipe that never closes and the run has a
+    5s timeout: a version that reads stdin exits 124, one that does not returns
+    promptly. The old side exiting 124 is the bug demonstrated, not inferred.
+
+    Canary: removing the guard makes the new side hang too -- 1 pass / 1 fail.
+
+commit 2ccd832e1ab13e22617a9da5c53fed39f26c1f08
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 21:37:03 2026 -0400
+
+    anon-dns: handle qubesdb-read failing or returning nothing
+
+    The nameserver came from:
+
+      if has qubesdb-read ; then
+         [ -n "${dns_server}" ] || dns_server="$(qubesdb-read /qubes-primary-dns)"
+
+    Two failure modes, both reachable on a normal Qubes gateway:
+
+    - qubesdb-read EXITS NON-ZERO when qubesdb is not reachable. Under errexit that
+      killed the script outright, leaving /etc/resolv.conf untouched.
+    - qubesdb-read can SUCCEED while printing nothing. dns_server then stayed empty
+      and the script wrote a bare "nameserver " line -- a resolv.conf entry with no
+      address at all.
+
+    Both are now caught, and the script REFUSES rather than guessing.
+
+    Deliberately NOT the reviewer's proposed patch: it dropped the else branch, which
+    would have removed the 10.0.2.3 fallback for non-Qubes systems entirely. And
+    10.0.2.3 must NOT be used as a fallback when qubesdb-read fails: that address is
+    the non-Qubes default, so on Qubes it would point resolv.conf somewhere wrong
+    and break DNS silently. An explicit error is the correct answer; dns_server= is
+    still available as an override.
+
+    Found by coderabbit.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+      5 pass, 0 fail
+
+      not Qubes -> 10.0.2.3 fallback              same,   nameserver 10.0.2.3
+      Qubes, qubesdb works -> its value           same,   nameserver 10.139.1.1
+      dns_server preset wins over qubesdb         same,   nameserver 192.0.2.53
+      Qubes, qubesdb FAILS -> refuses, no guess   differ, ERROR
+      Qubes, qubesdb EMPTY -> refuses, no guess   differ, ERROR
+
+    qubesdb-read is STUBBED per case, and PATH is built from scratch so 'absent'
+    genuinely means absent. The earlier anon-dns harness let the HOST's real
+    qubesdb-read decide, so the Qubes branch was never under the test's control --
+    it silently returned this machine's 10.139.1.1 for every case.
+
+    Canary: restoring the original handling gives 3 pass / 2 fail, and the recorded
+    output is the bug itself -- with an EMPTY qubesdb-read the old code writes
+
+      nameserver
+
+    into resolv.conf, and with a FAILING one it writes nothing at all because the
+    script died.
+
+    The comparison filters the xtrace COMMAND trace but keeps the 'true "INFO: ..."'
+    lines, which under set -x are this script's only user-visible output. Without
+    that filter all three unchanged cases reported a difference, purely because the
+    if/else was restructured.
+
+commit 367299f111221adee5d5a3820d05243d8635d72b
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 21:16:18 2026 -0400
+
+    onion-grater-add/-remove: validate profile_name before building a path
+
+    Both scripts run as root and build a filesystem path out of their one argument:
+
+      /usr/local/etc/onion-grater-merger.d/${profile_name}.yml
+
+    Quoting stops word splitting but NOT path components. 'sudo onion-grater-remove
+    ../../../../etc/target' makes the unlink remove /etc/target.yml as root.
+
+    PRE-EXISTING, not introduced by the strict-mode pass: master has the same
+    'profile_name="$1"' -> path -> unlink shape. Fixed here because this pass is
+    already touching these two files.
+
+    Both now call validate_safe_filename from helper-scripts' strings.bsh, which
+    rejects path separators, '.', '..', any embedded '..', control characters, a
+    leading '-' and over-length values. Using the existing helper rather than
+    hand-rolling a regex is deliberate -- filename sanitisation belongs in one
+    place, and that function already has its own tests.
+
+    Found by coderabbit.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+      8 pass, 0 fail
+
+      add: unknown profile -> its own error       same
+      add: exact match still found                same
+      add: wildcard match still found             same
+      remove: absent profile -> None removed      same
+      remove: present profile still removed       same
+      remove: rejects ../ traversal               blocked
+      add: rejects ../ traversal                  blocked
+      remove: rejects a path separator            blocked
+
+    The three new rows use a 'blocked' expectation, deliberately distinct from
+    'differ': the old version does not abort on these inputs, it proceeds to build
+    the path. The property asserted is that the NEW version refuses and the old one
+    does not -- reusing 'differ' would have demanded an unbound-variable abort that
+    never happens here and would have failed for the wrong reason.
+
+    Canary: removing the validation from both gives 5 pass / 3 fail, and the three
+    that fail are exactly the traversal rows.
+
+    Harness note: strings.bsh is stubbed as a FILE rather than inline in the sed
+    replacement. The inline form needed quotes nested three deep, and shellcheck
+    caught that it was silently unquoting '${!1}' -- so the stub was broken in a way
+    that would have made the cases pass for no reason.
+
+commit dec971ededd4076765c76798d77a6d00430ab380
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 15:14:30 2026 -0400
+
+    anon-gw-anonymizer-config: four more strict-mode aborts
+
+    Each one bypassed a message the script already had for exactly that case.
+
+    onion-grater-add / onion-grater-remove
+    --------------------------------------
+
+    profile_file_source is assigned on the exact-match branch or inside the glob
+    loop; removed is assigned only when an unlink actually succeeds. With nullglob,
+    an unknown or already-absent profile makes the loop run zero times, so both
+    stayed unset -- and the test below aborted instead of printing "does not exist!"
+    or "None removed. (Maybe already removed?)". A failed unlink left removed unset
+    too.
+
+    anon-verify
+    -----------
+
+    The grep that prints the concise [warn]/[err] report has no no-match guard,
+    while the identical grep on the very next line does. A verifier that failed
+    WITHOUT emitting a tagged line -- leaprun unable to invoke it at all, for one --
+    made it match nothing and abort, killing the Full Report below, which is the
+    only place that failure would have been visible.
+
+    torrc-parser
+    ------------
+
+    'parser "${second_word}"' -- I quoted it, and it must not be. A torrc
+    '%include /etc/torrc.d/*.conf' puts a GLOB there; quoted, the wildcard reaches
+    parser literally, the literal path is neither a file nor a directory, and every
+    included file silently vanishes from the used-files and detailed-error reports.
+    Restored unquoted with the reason recorded, since a blanket quoting sweep will
+    otherwise reintroduce it.
+
+    Found by codex. Three of the seven it reported were already fixed (SUDO_USER and
+    both profile_name defaults); verified against the current files rather than
+    assumed.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+      5 pass, 0 fail
+
+      add: unknown profile -> its own error       same
+      add: exact match still found                same
+      add: wildcard match still found             same
+      remove: absent profile -> None removed      same
+      remove: present profile still removed       same
+
+    EVERY case expects the two versions to AGREE, and that is the point: the fix
+    RESTORES master's behaviour, because without nounset an unset variable is simply
+    empty and master already reached the intended message. The evidence that these
+    defaults matter is the canary, not the diff.
+
+    Canary: removing both defaults gives 3 pass / 2 fail, and the two that fail are
+    exactly the no-match cases, with 'removed: unbound variable' visible.
+
+    Three harness errors on the way, all mine, all the same shape -- a case that
+    never reached the code, or a comparison that measured the fixture instead of the
+    behaviour:
+    - the root guard blocked every run, and two cases PASSED vacuously because both
+      sides emitted the same root error. The guard is neutralised in the copy now,
+      and a run carrying that message fails outright.
+    - the scripts echo the resolved profile path, which contains the variant
+      directory, so every case differed on the fixture location until it was
+      normalised.
+    - I expected the two versions to DIFFER. They must not; only the unfixed strict
+      version aborts.
+
+commit 61653e4a3352b250ff7f1b31c993344a00dc3fea
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 14:40:34 2026 -0400
+
+    anon-server-to-client-install: source has.sh before calling has
+
+    'has' is a shell FUNCTION provided by /usr/libexec/helper-scripts/has.sh, not an
+    executable. This file calls it at the
+
+      has touch tee mkdir chown cp sudo id groups "${unittool}" sleep
+
+    preflight without ever sourcing the helper, so every invocation died with
+    'has: command not found' before installing the authorization.
+
+    Its siblings anon-auth-autogen, anon-dns, onion-grater-add and onion-grater-remove
+    all source it. This one was missed.
+
+    Found by codex.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+    The test is package-wide rather than single-file, because the same omission can
+    recur in any sibling: it finds every bash script under usr/ that CALLS has and
+    asserts each also sources has.sh.
+
+      4 script(s) call has; fail=0
+
+    It refuses to pass when it finds no callers at all, so a bad path or an empty
+    fixture reports failure instead of a silent green.
+
+    Canary: against the pre-fix file it reports
+      FAIL: anon-server-to-client-install  calls has WITHOUT sourcing has.sh
+    and exits 1.
+
+commit dd78c2c1e9850de6d3a90f5bdf0d9025fb3f7a9e
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 14:08:35 2026 -0400
+
+    anon-gw-anonymizer-config: R-010 strict mode for anon-dns, tor-config-sane
+
+    anon-dns: two real nounset traps
+    --------------------------------
+
+    - '$1' is read by 'if [ "$1" = "remove" ]', but the add path is invoked with NO
+      argument at all. Under nounset that aborted every add.
+    - '$dns_server' is read by '[ -n "$dns_server" ] || dns_server=...' -- an idiom
+      that exists precisely so a caller can preset it from the environment. Reading
+      it before assignment is the point, so it is declared '${dns_server:-}' rather
+      than made mandatory.
+
+    Also 'echo' -> printf (R-034), 'command -v' -> has (R-090), braces, and '--'
+    before the grep pattern.
+
+    'set -x' is KEPT. Every message in this script is a 'true "INFO: ..."' line,
+    which produces no output on its own -- xtrace is the entire user-visible
+    reporting, so removing it would silence the tool.
+
+    tor-config-sane: the unit went green while Tor was misconfigured
+    -----------------------------------------------------------------
+
+    This script had no 'set -e' at all. Every step -- repair-torrc,
+    generate-tor-service-defaults-torrc-anondist, Qubes replace-ips -- could fail
+    silently, and it still printed END and exited 0. anon-gw-anonymizer-config.service
+    is Type=oneshot, so the unit reported success for a run that configured nothing.
+
+    Making a step fatal would be worse: a failure in the first would skip the later,
+    INDEPENDENT ones. So each step still runs, its failure is recorded, and the
+    script exits non-zero at the end if any failed. The unit is only
+    'Before=tor.service' with no Requires=, so a failed exit surfaces the problem
+    without blocking Tor from starting.
+
+    One step is exempt: the 'timeout ... systemd-networkd-wait-online --ipv6' wait.
+    Timing out is the EXPECTED outcome on a host without IPv6 -- exactly the
+    condition the generate-...-anondist step exists to detect and configure around.
+    An unhandled non-zero there would abort before that step ever ran.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+    anon-dns, differential old vs new, comparing exit code, emitted output AND the
+    resulting /etc/resolv.conf (bwrap-isolated, writable /etc, stubbed helpers):
+
+      5 same, 0 differing
+
+    Cases: no argument at all, dns_server preset in the environment, explicit
+    remove with markers present, line already present, resolv.conf not writable.
+
+    Canaries: removing the '${dns_server:-}' default gives 3 same / 2 differing;
+    removing the '${1:-}' guard gives 2 same / 3 differing. Both abort on nounset.
+
+    The harness compares the script's OUTPUT, not its command trace: under 'set -x'
+    the trace necessarily changes for every cosmetic edit (echo -> printf, command
+    -v -> has, added --), while the 'true "INFO: ..."' lines are kept, since they
+    are the only reporting this script has.
+
+    tor-config-sane, per-step stub matrix, with each case declaring whether it
+    expects the two versions to agree:
+
+      6 pass, 0 fail
+
+      all steps succeed                        same    old=0 new=0
+      wait-online TIMES OUT (expected)         same    old=0 new=0
+      repair-torrc FAILS                       differ  old=0 new=1
+      generate-...-anondist FAILS              differ  old=0 new=1
+      inside Qubes, replace-ips FAILS          differ  old=0 new=1
+      inside Qubes, everything succeeds        same    old=0 new=0
+
+    The three 'differ' rows ARE the fix: old exits 0 on a failed step.
+
+    Canaries: removing the '|| true' on the timeout fails exactly the timeout row
+    (5 pass / 1 fail); removing the final 'exit ${exit_code}' fails exactly the
+    three differ rows (3 pass / 3 fail).
+
+commit 5f451d8e14370d0311ea310d540248457c1a878d
+Merge: cf8dfcd c36d7e0
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 12:32:52 2026 -0400
+
+    Merge org-ai-assisted/master into ai
+
+    The branch was created from a stale local master, so its PR diff showed
+    master's newer commits -- including a changelog version bump -- as REMOVALS.
+    Merging rather than rebasing, per the no-history-rewrites rule.
+
+commit cf8dfcd347b7d05b01d6547ccacca9a86c847716
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 12:26:10 2026 -0400
+
+    anon-gw-anonymizer-config: fix four nounset defects an external review found
+
+    Each of these variables is read by the very guard that exists to report it
+    being absent, so the guard aborted before it could speak.
+
+    1. usr/bin/anon-auth-autogen: 'ip' is read by 'if [ "${ip}" = "" ]' -- the test
+       whose whole job is to detect it being unset. Two lines above, the same file
+       already uses the '${x:-default}' form.
+    2. usr/bin/onion-grater-add and 3. usr/bin/onion-grater-remove:
+       'profile_name="$1"' with no argument at all, immediately before the guard
+       that prints 'syntax: sudo onion-grater-add profile-name'.
+    4. usr/bin/anon-server-to-client-install:
+         user_name="${user_name:-${SUDO_USER}}"
+       A nested default protects only the OUTER name. SUDO_USER is unset when this
+       runs as root directly rather than through sudo, and the INNER expansion
+       aborted even though the outer one had a fallback. Now '${SUDO_USER:-}'.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+      23 same/pass, 0 differing
+
+    The first version of the four new cases was WORTHLESS and the canary said so:
+    reverting all four defaults changed nothing, because unprivileged every one of
+    these scripts stops at its own "must run as root" check and the guard under
+    test is never reached. Re-run AS ROOT, and asserting what the guard must SAY
+    rather than just the exit code:
+
+      real:   PASS -- 'syntax: sudo onion-grater-add profile-name'
+      canary: FAIL -- 'line 44: $1: unbound variable'
+
+    which is precisely the difference the fix makes.
+
+    REPORTED, NOT FIXED -- two pre-existing security issues the same review raised:
+
+    - anon-auth-autogen writes onion-service private key material through
+      'sudo -u debian-tor ... tee' without setting a restrictive umask first, so on
+      a system with the usual 0022 umask those files land world-readable.
+    - anon-server-to-client-install copies a user-supplied '.auth_private' into
+      Tor's authorization directory with 'cp', preserving whatever permissions the
+      source had.
+
+    Both predate this pass. They are not strict-mode fixes, and getting key file
+    permissions wrong in the other direction makes Tor refuse the configuration
+    outright, so they need their own change and their own verification against a
+    real onion service. Tracked separately.
+
+commit 640567efceabce2c959bbb7425927f6b0355a270
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 09:58:25 2026 -0400
+
+    anon-gw-anonymizer-config: R-010 strict mode for anon-verify
+
+    anon-verify was deferred earlier in this pass because each nounset trap fixed
+    revealed the next one. enumerate-nounset.sh finds them in one pass instead, so
+    the reason no longer holds.
+
+    Four variables read but never assigned
+    --------------------------------------
+
+    - 'case $1' in the option loop read an unset $1 on its last iteration, so
+      anon-verify aborted BEFORE doing any work at all. That is also why earlier
+      probes of it looked clean: nothing downstream was ever reached.
+    - start_menu_instructions_system_first_part is interpolated into the
+      user-facing report three times and assigned only in systemcheck's
+      preparation.bsh, which anon-verify does not source. It has always expanded to
+      empty here, so the instruction renders with a blank prefix -- "  Terminal"
+      rather than "Start Menu / System / Terminal". Defaulted to empty to keep
+      exactly that; sourcing another package's fragment is a design change.
+    - tor_start_command is read by the two regexes that extract --defaults-torrc
+      and -f, but get_tor_start_command() and its call site are both COMMENTED OUT.
+      Empty, so both regexes have always failed and the torrc paths fall back to
+      their defaults.
+    - default_torrc and f_torrc follow from that: assigned only inside those
+      never-matching regexes, read unconditionally by the parser() call.
+
+    torrc-parser, which anon-verify SOURCES
+    ---------------------------------------
+
+    Strict mode in anon-verify propagates into it, so its own latent problems
+    became reachable:
+
+    - 'declare -a torrc_files' gives the array attribute WITHOUT creating the
+      variable, so the first '${torrc_files[@]}' read aborted. Now '=()'.
+    - extraneous_torrc was never declared at all, same fix.
+    - 'if [ "$extraneous_torrc" = "" ]' reads element 0 of an array, which is unset
+      when nothing was appended -- so the NORMAL case, no extraneous files, was the
+      one that aborted. Now '${extraneous_torrc[0]:-}', which keeps the original
+      meaning.
+    - 'style-ok: no-strict' waiver: the file is sourced, so a strict block here
+      would rewrite the caller's options rather than its own.
+
+    Also: 29 'echo' calls to printf (R-034), shellcheck braces and quoting, and
+    three SC2034/SC2154 waivers for variables that cross the file boundary --
+    anon_verify_report_html is consumed by systemcheck, VERY_VERBOSE is set by
+    anon-verify and read in torrc-parser.
+
+    Testing
+    -------
+
+    Gate exit 0 in an ISOLATED checkout.
+
+    Differential harness extended: anon-verify was previously STUBBED in it, so its
+    own behaviour had never been compared. Five cases added covering no-args,
+    --verbose, --help, -h and an unknown option.
+
+      21 same/pass, 0 differing
+
+    The harness's existing canary still passes: reverting the nounset defaults
+    reintroduces a real abort, so the defaults are load-bearing rather than
+    decoration.
+
+commit c8d3f9994ce1b047669506c729c8c698a817f5fb
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Fri Aug 7 07:17:09 2026 -0400
+
+    fix shellcheck directives for an isolated CI checkout
+
+    The gate passed locally but failed (or would fail) in CI. Cause: CI checks
+    each repo out ALONE, while locally they sit side by side as submodules
+    under derivative-maker/packages. A '# shellcheck source=' climbing out of
+    the repo ('../../../../helper-scripts/...') therefore resolves here and
+    not there, so shellcheck reports SC1091 and the gate fails on a commit
+    that looked clean.
+
+    The source= paths are kept -- they document where the file actually lives
+    -- and each is paired with a 'disable=SC1091' so an absent sibling is
+    tolerated. Same shape already used in security-misc master.
+
+    Follow-on findings from the same isolated run, each with a stated reason
+    rather than a blanket waiver:
+    - SC2154 on systemd_notify: assigned by the sourced systemd-notify.bsh,
+      which shellcheck can no longer follow.
+    - SC2034 on SCRIPTNAME and output_cmd: genuinely unused. suspend-pre's
+      output_cmd toggle is vestigial -- unlike suspend-post the script prints
+      directly -- flagged rather than removed, since wiring it up or dropping
+      it is a maintainer call.
+    - SC1090 on the uwt.d conf glob: a dynamic source, which R-081 prescribes
+      SC1090 for.
+
+    Verified with a new reproducer, ~/strict-pass-tests/ci-repro.sh, which
+    clones the repo on its own and runs the real gate there -- the condition
+    CI actually sees. All six repos: gate exit 0.
+
+    Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+
+commit d32ea1a024062af41af4ff8c037995cffb2e95cb
+Author: claude (dev163 38f9745c-aed1-4fb4-b6ae-9899f20f8de2) <noreply@anthropic.com>
+Date:   Wed Aug 5 15:00:47 2026 -0400
+
+    anon-gw-anonymizer-config: R-010 strict for 15 standalone scripts
+
+    Three of the package's 18 standalone scripts are deliberately excluded --
+    anon-verify, anon-dns and tor-config-sane -- see below.
+
+    51 instances of the nounset-unsafe defaulting idiom were converted:
+    '[ -n "${V}" ] || V=x' aborts under nounset before it can apply the
+    default. 'V="${V:-x}"' is exactly equivalent (both mean "keep if set and
+    non-empty, otherwise default"). Verified by rewriting them back and
+    watching 'line 39: hsname: unbound variable' return.
+
+    Other real traps fixed:
+    - anon-log read log1/log2/log3 where only some paths assign them; the very
+      next line already normalises an empty value to "empty".
+    - onion-grater-list read $1 and $2 before any argument-count check.
+
+    Behaviour deliberately preserved:
+    - The gateway-shortcuts (nyx, stoptor, restarttor, reloadtor) run a Tor
+      command and then 'sleep 86400' to keep their terminal window open, and
+      the pre-existing 'true "$?"' shows the status was intentionally
+      swallowed. Every command in them is now explicitly non-fatal, or errexit
+      would close the window on failure and the user would never see the
+      error. Where a status was being reported, it is captured with an
+      ||-suffixed assignment (R-011) rather than '|| true', which would always
+      read 0.
+    - anon-info's 'grep' pipeline and its dpkg-query previously yielded empty
+      output and continued when there was no match / no package.
+
+    Also: echo -> printf (R-034), 'has' instead of 'which' and 'command -v'
+    (R-090, SC2230), safe-rm (R-120), a relative shellcheck source path
+    (R-080), "${BASH_SOURCE[0]}" (SC2128), useless-cat removal (SC2002),
+    SC2250 braces. 'echo -n' became "printf '%s'" -- the no-trailing-newline
+    behaviour matters there, since 'cat -' appends a key file straight after.
+
+    Sandbox differential vs the pre-change scripts, comparing output AND exit
+    code with both versions staged at an identical path: 16 cases, all
+    identical.
+
+    Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+
+commit c36d7e01cefaf9ceafc1d360f62069060ea03e19
+Merge: 74af254 0eddfee
+Author: assisted-by-ai (Bot Account) (Machine Account) <228987186+assisted-by-ai@users.noreply.github.com>
+Date:   Sat Aug 1 05:00:19 2026 -0400
+
+    Merge pull request #3 from org-ai-assisted/ai
+
+    CI: add bandit, codeql-actions, secrets-audit scanner workflows
+
+commit 74af254881cf1c48c9d79513c62c129d448d945a
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sat Aug 1 08:45:53 2026 +0000
+
+    bumped changelog version
+
 commit dd270227a1ea0187c47c387d964cc4026a35e88d
 Merge: 6982579 96f711d
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sat Aug 1 04:33:45 2026 -0400
 
     Merge remote-tracking branch 'refs/remotes/org-ai-assisted/master'
+
+commit 0eddfeed129e365abfe04f9da31bd3bea4c31c8f
+Author: claude (dev142 b93fb2c6-e15f-4d45-8566-f3ded893b70e) <noreply@anthropic.com>
+Date:   Fri Jul 31 16:23:28 2026 -0400
+
+    CI: propagate bandit, codeql-actions, secrets-audit workflows
+
+    Byte-identical propagation from developer-meta-files
+    consumer-templates. Closes scanner-coverage gaps:
+
+    - consumer-bandit.yml: Python security lint, universal
+      self-discovery (extension + shebang scan), no per-repo config.
+    - consumer-codeql-actions.yml: CodeQL 'actions' language --
+      workflow-YAML security analysis (script-injection, missing
+      permissions, unpinned actions).
+    - consumer-secrets-audit.yml: manual-dispatch secrets surface
+      audit (presence flags only, values never emitted).
+
+    Managed files -- do not hand-edit; regenerated on the next
+    propagation pass.
+
+    ## AI-Assisted
+
+    Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 
 commit 96f711db603ca0294be0b0058a04bd9b9570c225
 Merge: 6982579 5c88e00
